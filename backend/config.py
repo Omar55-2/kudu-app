@@ -87,13 +87,6 @@ STATUS_RANK = {
     "reopened": 0, "new": 1, "open": 2, "in_progress": 3,
     "waiting": 4, "on_hold": 5, "resolved": 6, "closed": 7, "cancelled": 8,
 }
-# there are some problems in delegation logic
-# the on is delegated his ticket to someoneelse means his not available, I should not see him in the search for assigning tickets, or search for assign delegation
-# in the team members it shows someone is available even if he delgate his ticket to someone and he is not available, fix this
-# if I am covering somone ticket I should can delgate my tickets to someone else, and this someone now can see mine and the person i am covering for him, but the delegation shouldnot go over 3 levels like a to b, b to c, c cant delegate now untill ends the delegation
-# the Availability changes should reflcet, for example it should show in the members, or when somone on leave I should cant assign a ticket or delgate to him
-# also the Avg First Response not working it should count the time for open the ticket
-
 
 PRIORITIES = ["low", "medium", "high", "urgent", "critical"]
 PRIORITY_LABELS = {
@@ -142,4 +135,4 @@ AVAILABILITY_LABELS = {
     "available": "Available", "busy": "Busy", "dnd": "Do Not Disturb",
     "offline": "Offline", "on_leave": "On Leave", "delegating": "Delegating",
 }
-ACTIVE_TICKET_STATUSES = {"new", "open", "in_progress", "waiting", "on_hold", "reopened"}
+ACTIVE_TICKET_STATUSES = {"open", "in_progress", "waiting", "on_hold", "reopened"}

@@ -9,7 +9,7 @@ from backend.models import Notification, User
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))               # .../backend
 FRONTEND_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "frontend"))
-
+  
 STATUS_BADGE = {
     "new": "bg-blue-50 text-blue-700 border border-blue-100",
     "open": "bg-indigo-50 text-indigo-700 border border-indigo-100",
@@ -109,7 +109,7 @@ def create_app():
             "priority_badge": PRIORITY_BADGE,
             "priority_dot": PRIORITY_DOT,
         }
-
+ 
     @app.cli.command("init-db")
     def init_db_command():
         """Create all tables (flask --app backend.app init-db)."""
