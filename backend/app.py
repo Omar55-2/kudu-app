@@ -46,8 +46,10 @@ def create_app():
     )
     app.config.from_object(config)
     app.permanent_session_lifetime = config.PERMANENT_SESSION_LIFETIME
-
     db.init_app(app)
+    with app.app_context():
+        db.create_all()
+    # ---------------------------
     from datetime import timedelta as _td
 
     @app.template_filter('riyadh')
@@ -122,5 +124,4 @@ if __name__ == "__main__":
     with app.app_context():
         db.create_all()
     app.run(debug=True, host="0.0.0.0", port=5007) 
-    
-
+     
