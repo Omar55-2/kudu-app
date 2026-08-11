@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block page_title %}{{ other.full_name }}{% endblock %}
+{% block title %}{{ other.full_name }} &mdash; Connections{% endblock %}
+
+{% block content %}
+<div class="page-actions">
+  <div>
+    <h1 class="page-heading">{{ other.full_name }}</h1>
+    <p class="page-sub">{{ other.department }} &middot; {{ other.role | title }}</p>
+  </div>
+  <a href="{{ url_for('messages.inbox') }}" class="btn btn-ghost">&larr; All conversations</a>
+</div>
+
+<div class="detail-layout">
+  <div class="detail-main">
+    <section class="panel">
+      <h3 class="section-title">Conversation</h3>
+      {% for m in history %}
+      <article class="comment">
+        <div class="comment-top">
+          <strong>{{ m.sender.full_name if m.sender_id != current_user.id else 'You' }}</strong>
+          <time>{{ m.created_at | riyadh }}</time>
+        </div>
+        <p>{{ m.body }}</p>
+      </article>
+      {% else %}
+      <p class="muted">No messages yet &mdash; say hello.</p>
+      {% endfor %}
+
+      <form method="POST" action="{{ url_for('messages.send') }}" class="comment-form">
+        <input type="hidden" name="recipient_id" value="{{ other.id }}">
+        <div class="form-group">
+          <label for="body">Message</label>
+          <textarea id="body" name="body" rows="3" placeholder="Write a message..." required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm">Send</button>
+      </form>
+    </section>
+  </div>
+
+  <aside class="detail-side">
+    <section class="panel">
+      <h3 class="section-title">Other Conversations</h3>
+      <ul class="simple-list">
+        {% for t in threads %}
+        <li>
+          <a href="{{ url_for('messages.thread', other_id=t.other.id) }}">
+            {{ t.other.full_name }}
+            {% if t.unread > 0 and t.other.id != other.id %}<span class="badge badge-waiting">{{ t.unread }}</span>{% endif %}
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+  </aside>
+</div>
+{% endblock %}

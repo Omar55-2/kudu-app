@@ -1,0 +1,6 @@
+<div class="flex items-center p-1 bg-gray-50 rounded-xl border border-gray-100 w-fit mb-5">
+  <a href="{{ url_for('team.overview') }}" class="px-4 py-1.5 text-[13px] font-semibold rounded-lg transition-colors {% if request.endpoint == 'team.overview' %}bg-white shadow-sm text-gray-900 border border-gray-100/50{% else %}text-gray-500 hover:text-gray-900{% endif %}">Overview</a>
+  <a href="{{ url_for('team.members') }}" class="px-4 py-1.5 text-[13px] font-semibold rounded-lg transition-colors {% if request.endpoint in ('team.members','team.member_profile') %}bg-white shadow-sm text-gray-900 border border-gray-100/50{% else %}text-gray-500 hover:text-gray-900{% endif %}">Members</a>
+  <a href="{{ url_for('team.departments') }}" class="px-4 py-1.5 text-[13px] font-semibold rounded-lg transition-colors {% if request.endpoint in ('team.departments','team.department_detail') %}bg-white shadow-sm text-gray-900 border border-gray-100/50{% else %}text-gray-500 hover:text-gray-900{% endif %}">Departments</a>
+</div>
+

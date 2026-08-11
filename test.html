@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tickets Dashboard</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #e5e5e5; /* Outer background to mimic the image mockup */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 2rem;
+        }
+        
+        /* Custom scrollbar to match sleek design */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+        .app-shadow {
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main App Container -->
+    <div class="w-full max-w-[1300px] h-[800px] bg-white rounded-3xl app-shadow flex overflow-hidden border border-gray-100">
+        
+        <!-- Sidebar -->
+        <aside class="w-[260px] bg-[#fafafa] flex flex-col pt-6 pb-6 border-r border-gray-100 flex-shrink-0">
+            
+            <!-- Team Management Dropdown -->
+            <div class="px-5 mb-5">
+                <div class="flex items-center justify-between p-2 rounded-xl border border-gray-200 bg-white shadow-sm cursor-pointer hover:bg-gray-50 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 bg-[#ff6337] rounded-lg flex items-center justify-center text-white">
+                            <!-- Approximate Logo Icon -->
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M16 6 12 2 8 6"/><path d="M12 2v13"/></svg>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-[11px] font-medium text-gray-400 uppercase tracking-wider leading-none mb-1">Team</span>
+                            <span class="text-[14px] font-semibold text-gray-900 leading-none">Management</span>
+                        </div>
+                    </div>
+                    <i data-lucide="chevrons-up-down" class="w-4 h-4 text-gray-400"></i>
+                </div>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="px-5 mb-6">
+                <div class="flex items-center bg-gray-100 rounded-xl px-3 py-2">
+                    <i data-lucide="search" class="w-4 h-4 text-gray-400 mr-2"></i>
+                    <input type="text" placeholder="Search" class="bg-transparent border-none outline-none text-[13px] text-gray-700 w-full placeholder-gray-500">
+                    <span class="text-[11px] font-medium text-gray-400 bg-gray-200/60 px-1.5 py-0.5 rounded">⌘F</span>
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="flex-1 px-3 space-y-1">
+                <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors">
+                    <i data-lucide="layout-dashboard" class="w-[18px] h-[18px]"></i>
+                    <span class="text-[14px] font-medium">Dashboard</span>
+                </a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors">
+                    <i data-lucide="arrow-right-left" class="w-[18px] h-[18px]"></i>
+                    <span class="text-[14px] font-medium">Payments</span>
+                </a>
+                
+                <!-- Active Item -->
+                <a href="#" class="flex items-center gap-3 px-3 py-2.5 mt-1 mb-1 rounded-xl bg-white border border-gray-100 shadow-[0_2px_4px_rgba(0,0,0,0.02)] text-gray-900">
+                    <i data-lucide="file-plus-2" class="w-[18px] h-[18px] text-gray-800"></i>
+                    <span class="text-[14px] font-semibold">Tickets</span>
+                </a>
+
+                <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors">
+                    <i data-lucide="users" class="w-[18px] h-[18px]"></i>
+                    <span class="text-[14px] font-medium">Customers</span>
+                </a>
+                <div class="h-px bg-gray-200 my-2 mx-3"></div> <!-- Divider -->
+                <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors">
+                    <i data-lucide="mouse-pointer-click" class="w-[18px] h-[18px]"></i>
+                    <span class="text-[14px] font-medium">Automations</span>
+                </a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors">
+                    <i data-lucide="boxes" class="w-[18px] h-[18px]"></i>
+                    <span class="text-[14px] font-medium">Connections</span>
+                </a>
+                <a href="#" class="flex items-center justify-between px-3 py-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="git-branch" class="w-[18px] h-[18px]"></i>
+                        <span class="text-[14px] font-medium">Workflows</span>
+                    </div>
+                    <span class="bg-gray-100 text-gray-700 text-[11px] font-bold px-1.5 py-0.5 rounded-md">2</span>
+                </a>
+                <div class="h-px bg-gray-200 my-2 mx-3"></div> <!-- Divider -->
+                <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors">
+                    <i data-lucide="user-cog" class="w-[18px] h-[18px]"></i>
+                    <span class="text-[14px] font-medium">User Management</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 flex flex-col bg-white overflow-hidden">
+            
+            <!-- Header Section -->
+            <header class="pt-8 px-10 pb-4 border-b border-transparent">
+                <div class="text-[13px] text-gray-500 mb-1">Tickets</div>
+                <h1 class="text-[32px] font-bold text-gray-900 tracking-tight mb-6">Tickets</h1>
+                
+                <!-- Filters & Controls -->
+                <div class="flex items-center gap-4">
+                    <!-- Tabs -->
+                    <div class="flex items-center p-1 bg-gray-50 rounded-xl border border-gray-100">
+                        <button class="px-4 py-1.5 text-[13px] font-semibold bg-white rounded-lg shadow-sm text-gray-900 border border-gray-100/50">Active</button>
+                        <button class="px-4 py-1.5 text-[13px] font-medium text-gray-500 hover:text-gray-900 transition-colors">Timeline</button>
+                        <button class="px-4 py-1.5 text-[13px] font-medium text-gray-500 hover:text-gray-900 transition-colors">Mine</button>
+                    </div>
+                    
+                    <!-- Buttons -->
+                    <button class="flex items-center gap-2 px-3 py-1.5 text-[13px] font-medium text-gray-700 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors">
+                        <i data-lucide="plus" class="w-[14px] h-[14px]"></i> Filter
+                    </button>
+                    <button class="flex items-center gap-2 px-3 py-1.5 text-[13px] font-medium text-gray-700 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors">
+                        <i data-lucide="arrow-up-down" class="w-[14px] h-[14px]"></i> Sort
+                    </button>
+                </div>
+            </header>
+
+            <!-- Kanban Board -->
+            <div class="flex-1 px-10 py-6 overflow-x-auto overflow-y-auto">
+                <div class="flex gap-6 min-w-max h-full items-start">
+                    
+                    <!-- Column: To Do -->
+                    <div class="w-[300px] flex flex-col gap-4">
+                        <!-- Column Header -->
+                        <div class="flex items-center justify-between px-1">
+                            <div class="flex items-center gap-2">
+                                <div class="w-2.5 h-2.5 rounded-full bg-[#fbbf24]"></div>
+                                <h2 class="text-gray-500 font-medium text-[14px]">To Do</h2>
+                                <span class="bg-gray-100 text-gray-600 text-[12px] px-2 py-0.5 rounded-md font-semibold ml-1">2</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-gray-400">
+                                <i data-lucide="plus" class="w-4 h-4 cursor-pointer hover:text-gray-700"></i>
+                                <i data-lucide="more-vertical" class="w-4 h-4 cursor-pointer hover:text-gray-700"></i>
+                            </div>
+                        </div>
+
+                        <!-- Card 1 -->
+                        <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:border-gray-300 transition-colors cursor-pointer">
+                            <div class="text-[12px] text-gray-400 mb-2">Client: <span class="text-gray-600 font-medium">Skylight Inc.</span></div>
+                            <h3 class="font-semibold text-gray-900 text-[15px] leading-tight mb-4">Brainstorm Motion Ideas for Int...</h3>
+                            
+                            <div class="flex flex-col gap-3">
+                                <div class="flex items-center gap-2 text-[12px] font-medium text-gray-600">
+                                    <svg class="w-4 h-4 transform -rotate-90" viewBox="0 0 20 20">
+                                        <circle cx="10" cy="10" r="8" fill="transparent" stroke="#f3f4f6" stroke-width="2.5" />
+                                        <circle cx="10" cy="10" r="8" fill="transparent" stroke="#3b82f6" stroke-width="2.5" stroke-dasharray="50.26" stroke-dashoffset="25.13" />
+                                    </svg>
+                                    50%
+                                </div>
+                                <div class="flex items-center gap-1.5 text-[12px] text-gray-500 font-medium">
+                                    <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                                    Sep 24 - Okt 4
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">
+                                <div class="flex items-center gap-3 text-[12px] text-gray-500 font-medium">
+                                    <div class="flex items-center gap-1"><i data-lucide="message-square" class="w-3.5 h-3.5"></i> 2</div>
+                                    <div class="flex items-center gap-1"><i data-lucide="check-square" class="w-3.5 h-3.5"></i> 1/5</div>
+                                </div>
+                                <div class="flex -space-x-2">
+                                    <img class="w-6 h-6 rounded-full border-2 border-white" src="https://i.pravatar.cc/100?img=1" alt="User">
+                                    <img class="w-6 h-6 rounded-full border-2 border-white" src="https://i.pravatar.cc/100?img=2" alt="User">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 2 -->
+                        <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:border-gray-300 transition-colors cursor-pointer">
+                            <div class="text-[12px] text-gray-400 mb-2">Client: <span class="text-gray-600 font-medium">Skylight Inc.</span></div>
+                            <h3 class="font-semibold text-gray-900 text-[15px] leading-tight mb-4">Initial Keyframe Animations for...</h3>
+                            
+                            <div class="flex flex-col gap-3">
+                                <div class="flex items-center gap-2 text-[12px] font-medium text-gray-600">
+                                    <svg class="w-4 h-4 transform -rotate-90" viewBox="0 0 20 20">
+                                        <circle cx="10" cy="10" r="8" fill="transparent" stroke="#f3f4f6" stroke-width="2.5" />
+                                        <circle cx="10" cy="10" r="8" fill="transparent" stroke="#eab308" stroke-width="2.5" stroke-dasharray="50.26" stroke-dashoffset="12.56" />
+                                    </svg>
+                                    75%
+                                </div>
+                                <div class="flex items-center gap-1.5 text-[12px] text-gray-500 font-medium">
+                                    <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                                    Sep 24 - Okt 4
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">
+                                <div class="flex items-center gap-3 text-[12px] text-gray-500 font-medium">
+                                    <div class="flex items-center gap-1"><i data-lucide="message-square" class="w-3.5 h-3.5"></i> 2</div>
+                                    <div class="flex items-center gap-1"><i data-lucide="check-square" class="w-3.5 h-3.5"></i> 1/5</div>
+                                </div>
+                                <div class="flex -space-x-2">
+                                    <img class="w-6 h-6 rounded-full border-2 border-white" src="https://i.pravatar.cc/100?img=3" alt="User">
+                                    <img class="w-6 h-6 rounded-full border-2 border-white" src="https://i.pravatar.cc/100?img=4" alt="User">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Add New Button -->
+                        <button class="flex items-center gap-2 py-2 px-1 text-[13px] font-medium text-gray-500 hover:text-gray-800 transition-colors mt-2">
+                            <i data-lucide="plus" class="w-4 h-4"></i> Add new
+                        </button>
+                    </div>
+
+                    <!-- Column: In Progress -->
+                    <div class="w-[300px] flex flex-col gap-4">
+                        <!-- Column Header -->
+                        <div class="flex items-center justify-between px-1">
+                            <div class="flex items-center gap-2">
+                                <div class="w-2.5 h-2.5 rounded-full bg-[#10b981]"></div>
+                                <h2 class="text-gray-500 font-medium text-[14px]">In Progress</h2>
+                                <span class="bg-gray-100 text-gray-600 text-[12px] px-2 py-0.5 rounded-md font-semibold ml-1">2</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-gray-400">
+                                <i data-lucide="plus" class="w-4 h-4 cursor-pointer hover:text-gray-700"></i>
+                                <i data-lucide="more-vertical" class="w-4 h-4 cursor-pointer hover:text-gray-700"></i>
+                            </div>
+                        </div>
+
+                        <!-- Card 3 -->
+                        <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:border-gray-300 transition-colors cursor-pointer">
+                            <div class="text-[12px] text-gray-400 mb-2">Client: <span class="text-gray-600 font-medium">Nexus</span></div>
+                            <h3 class="font-semibold text-gray-900 text-[15px] leading-tight mb-4">Tweak Animation Speed and E...</h3>
+                            
+                            <div class="flex flex-col gap-3">
+                                <div class="flex items-center gap-2 text-[12px] font-medium text-gray-600">
+                                    <svg class="w-4 h-4 transform -rotate-90" viewBox="0 0 20 20">
+                                        <circle cx="10" cy="10" r="8" fill="transparent" stroke="#f3f4f6" stroke-width="2.5" />
+                                        <circle cx="10" cy="10" r="8" fill="transparent" stroke="#eab308" stroke-width="2.5" stroke-dasharray="50.26" stroke-dashoffset="25.13" />
+                                    </svg>
+                                    50%
+                                </div>
+                                <div class="flex items-center gap-1.5 text-[12px] text-gray-500 font-medium">
+                                    <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                                    Sep 24 - Okt 4
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">
+                                <div class="flex items-center gap-3 text-[12px] text-gray-500 font-medium">
+                                    <div class="flex items-center gap-1"><i data-lucide="message-square" class="w-3.5 h-3.5"></i> 2</div>
+                                    <div class="flex items-center gap-1"><i data-lucide="check-square" class="w-3.5 h-3.5"></i> 1/5</div>
+                                </div>
+                                <div class="flex -space-x-2">
+                                    <img class="w-6 h-6 rounded-full border-2 border-white" src="https://i.pravatar.cc/100?img=5" alt="User">
+                                    <img class="w-6 h-6 rounded-full border-2 border-white" src="https://i.pravatar.cc/100?img=6" alt="User">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 4 -->
+                        <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:border-gray-300 transition-colors cursor-pointer">
+                            <div class="text-[12px] text-gray-400 mb-2">Client: <span class="text-gray-600 font-medium">Skylight Inc.</span></div>
+                            <h3 class="font-semibold text-gray-900 text-[15px] leading-tight mb-4">Get Visual Assets from Graphic...</h3>
+                            
+                            <div class="flex flex-col gap-3">
+                                <div class="flex items-center gap-2 text-[12px] font-medium text-gray-600">
+                                    <svg class="w-4 h-4 transform -rotate-90" viewBox="0 0 20 20">
+                                        <circle cx="10" cy="10" r="8" fill="transparent" stroke="#f3f4f6" stroke-width="2.5" />
+                                        <circle cx="10" cy="10" r="8" fill="transparent" stroke="#3b82f6" stroke-width="2.5" stroke-dasharray="50.26" stroke-dashoffset="37.69" />
+                                    </svg>
+                                    25%
+                                </div>
+                                <div class="flex items-center gap-1.5 text-[12px] text-gray-500 font-medium">
+                                    <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                                    Sep 24 - Okt 4
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">
+                                <div class="flex items-center gap-3 text-[12px] text-gray-500 font-medium">
+                                    <div class="flex items-center gap-1"><i data-lucide="message-square" class="w-3.5 h-3.5"></i> 2</div>
+                                    <div class="flex items-center gap-1"><i data-lucide="check-square" class="w-3.5 h-3.5"></i> 1/5</div>
+                                </div>
+                                <div class="flex -space-x-2">
+                                    <img class="w-6 h-6 rounded-full border-2 border-white" src="https://i.pravatar.cc/100?img=7" alt="User">
+                                    <img class="w-6 h-6 rounded-full border-2 border-white" src="https://i.pravatar.cc/100?img=8" alt="User">
+                                </div>
+                            </div>
+                        </div>
+                         
+                        <!-- Card 5 (Partially seen at bottom) -->
+                        <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:border-gray-300 transition-colors cursor-pointer opacity-50">
+                             <div class="text-[12px] text-gray-400 mb-2">Client: <span class="text-gray-600 font-medium">Nexus</span></div>
+                            <h3 class="font-semibold text-gray-900 text-[15px] leading-tight mb-2">Export Different Formats for So...</h3>
+                        </div>
+                    </div>
+
+                    <!-- Column: Blocked (Styled to appear slightly faded/cut off as in image) -->
+                    <div class="w-[300px] flex flex-col gap-4 opacity-50 pointer-events-none">
+                         <!-- Column Header -->
+                         <div class="flex items-center justify-between px-1">
+                            <div class="flex items-center gap-2">
+                                <div class="w-2.5 h-2.5 rounded-full bg-[#8b5cf6]"></div>
+                                <h2 class="text-gray-500 font-medium text-[14px]">Blocked</h2>
+                                <span class="bg-gray-100 text-gray-600 text-[12px] px-2 py-0.5 rounded-md font-semibold ml-1">2</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-gray-400">
+                                <i data-lucide="plus" class="w-4 h-4 cursor-pointer hover:text-gray-700"></i>
+                                <i data-lucide="more-vertical" class="w-4 h-4 cursor-pointer hover:text-gray-700"></i>
+                            </div>
+                        </div>
+
+                        <!-- Card 6 -->
+                        <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+                            <div class="text-[12px] text-gray-400 mb-2">Client: <span class="text-gray-600 font-medium">Microsoft</span></div>
+                            <h3 class="font-semibold text-gray-900 text-[15px] leading-tight mb-4">Develop Dynami...</h3>
+                            
+                            <div class="flex flex-col gap-3">
+                                <div class="flex items-center gap-2 text-[12px] font-medium text-gray-600">
+                                    <svg class="w-4 h-4 transform -rotate-90" viewBox="0 0 20 20">
+                                        <circle cx="10" cy="10" r="8" fill="transparent" stroke="#f3f4f6" stroke-width="2.5" />
+                                        <circle cx="10" cy="10" r="8" fill="transparent" stroke="#9ca3af" stroke-width="2.5" stroke-dasharray="50.26" stroke-dashoffset="12.56" />
+                                    </svg>
+                                    75%
+                                </div>
+                                <div class="flex items-center gap-1.5 text-[12px] text-gray-500 font-medium">
+                                    <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                                    Sep 24 - Okt 4
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">
+                                <div class="flex items-center gap-3 text-[12px] text-gray-500 font-medium">
+                                    <div class="flex items-center gap-1"><i data-lucide="message-square" class="w-3.5 h-3.5"></i> 2</div>
+                                    <div class="flex items-center gap-1"><i data-lucide="check-square" class="w-3.5 h-3.5"></i> 1/5</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 7 -->
+                        <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+                            <div class="text-[12px] text-gray-400 mb-2">Client: <span class="text-gray-600 font-medium">Microsoft</span></div>
+                            <h3 class="font-semibold text-gray-900 text-[15px] leading-tight mb-4">Adjust Text Anim...</h3>
+                            
+                            <div class="flex flex-col gap-3">
+                                <div class="flex items-center gap-2 text-[12px] font-medium text-gray-600">
+                                    <svg class="w-4 h-4 transform -rotate-90" viewBox="0 0 20 20">
+                                        <circle cx="10" cy="10" r="8" fill="transparent" stroke="#f3f4f6" stroke-width="2.5" />
+                                        <circle cx="10" cy="10" r="8" fill="transparent" stroke="#9ca3af" stroke-width="2.5" stroke-dasharray="50.26" stroke-dashoffset="37.69" />
+                                    </svg>
+                                    25%
+                                </div>
+                                <div class="flex items-center gap-1.5 text-[12px] text-gray-500 font-medium">
+                                    <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                                    Sep 24 - Okt 4
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">
+                                <div class="flex items-center gap-3 text-[12px] text-gray-500 font-medium">
+                                    <div class="flex items-center gap-1"><i data-lucide="message-square" class="w-3.5 h-3.5"></i> 2</div>
+                                    <div class="flex items-center gap-1"><i data-lucide="check-square" class="w-3.5 h-3.5"></i> 1/5</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                         <!-- Add New Button -->
+                         <button class="flex items-center gap-2 py-2 px-1 text-[13px] font-medium text-gray-500 mt-2">
+                            <i data-lucide="plus" class="w-4 h-4"></i> Add new
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Initialize Lucide Icons -->
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block crumb %}Tickets{% endblock %}
+{% block page_title %}
+  {% if current_scope == 'department' %}{{ current_user.department }} Queue
+  {% elif current_scope == 'all' %}All Tickets
+  {% elif current_scope == 'delegated' %}Delegated to Me
+  {% else %}My Tickets{% endif %}
+{% endblock %}
+{% block title %}Tickets &mdash; Kudu Ticketing{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+  <div class="flex items-center p-1 bg-gray-50 rounded-xl border border-gray-100">
+    {% set tabs = [('mine','My Tickets')] %}
+    <a href="{{ url_for('tickets.index', scope='mine') }}" class="px-4 py-1.5 text-[13px] font-semibold rounded-lg transition-colors {% if current_scope=='mine' %}bg-white shadow-sm text-gray-900 border border-gray-100/50{% else %}text-gray-500 hover:text-gray-900{% endif %}">My Tickets</a>
+    <a href="{{ url_for('tickets.index', scope='department') }}" class="px-4 py-1.5 text-[13px] font-semibold rounded-lg transition-colors {% if current_scope=='department' %}bg-white shadow-sm text-gray-900 border border-gray-100/50{% else %}text-gray-500 hover:text-gray-900{% endif %}">{{ current_user.department }}</a>
+    {% if current_user.is_admin %}
+    <a href="{{ url_for('tickets.index', scope='all') }}" class="px-4 py-1.5 text-[13px] font-semibold rounded-lg transition-colors {% if current_scope=='all' %}bg-white shadow-sm text-gray-900 border border-gray-100/50{% else %}text-gray-500 hover:text-gray-900{% endif %}">All Departments</a>
+    {% endif %}
+    {% if show_delegated_tab or current_scope == 'delegated' %}
+    <a href="{{ url_for('tickets.index', scope='delegated') }}" class="px-4 py-1.5 text-[13px] font-semibold rounded-lg transition-colors {% if current_scope=='delegated' %}bg-white shadow-sm text-gray-900 border border-gray-100/50{% else %}text-gray-500 hover:text-gray-900{% endif %}">Delegated to Me</a>
+    {% endif %}
+  </div>
+
+  <div class="flex items-center gap-2">
+    <div class="flex gap-0.5 p-0.5 bg-gray-50 rounded-lg border border-gray-100">
+      <button type="button" id="view-btn-board" onclick="setTicketView('board','{{ current_scope }}')" class="view-switch-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-semibold text-gray-500"><i data-lucide="columns-3" class="w-3.5 h-3.5"></i>Board</button>
+      <button type="button" id="view-btn-table" onclick="setTicketView('table','{{ current_scope }}')" class="view-switch-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-semibold text-gray-500"><i data-lucide="list" class="w-3.5 h-3.5"></i>Table</button>
+    </div>
+  </div>
+</div>
+
+<form method="GET" action="{{ url_for('tickets.index') }}" class="flex items-center gap-3 mb-5 flex-wrap">
+  <input type="hidden" name="scope" value="{{ current_scope }}">
+  <div class="flex items-center bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 flex-1 min-w-[220px]">
+    <i data-lucide="search" class="w-4 h-4 text-gray-400 mr-2"></i>
+    <input type="text" name="q" value="{{ query_text }}" placeholder="Ticket number or title..." class="bg-transparent border-none outline-none text-[13px] text-gray-700 w-full">
+  </div>
+  <select name="status" onchange="this.form.submit()" class="px-3 py-2 border border-gray-200 rounded-xl text-[13px] bg-white">
+    <option value="all" {% if current_status=='all' %}selected{% endif %}>All statuses ({{ total }})</option>
+    {% for s in statuses %}<option value="{{ s }}" {% if current_status==s %}selected{% endif %}>{{ status_labels[s] }} ({{ counts.get(s,0) }})</option>{% endfor %}
+  </select>
+  <select name="priority" onchange="this.form.submit()" class="px-3 py-2 border border-gray-200 rounded-xl text-[13px] bg-white">
+    <option value="all" {% if current_priority=='all' %}selected{% endif %}>All priorities</option>
+    {% for p in priorities %}<option value="{{ p }}" {% if current_priority==p %}selected{% endif %}>{{ priority_labels[p] }}</option>{% endfor %}
+  </select>
+  <select name="category" onchange="this.form.submit()" class="px-3 py-2 border border-gray-200 rounded-xl text-[13px] bg-white">
+    <option value="all" {% if current_category=='all' %}selected{% endif %}>All categories</option>
+    {% for c in categories %}<option value="{{ c }}" {% if current_category==c %}selected{% endif %}>{{ c|title }}</option>{% endfor %}
+  </select>
+  {% if current_scope == 'all' %}
+  <select name="department" onchange="this.form.submit()" class="px-3 py-2 border border-gray-200 rounded-xl text-[13px] bg-white">
+    <option value="all" {% if current_department=='all' %}selected{% endif %}>All departments</option>
+    {% for d in departments %}<option value="{{ d }}" {% if current_department==d %}selected{% endif %}>{{ d }}</option>{% endfor %}
+  </select>
+  {% endif %}
+  {% if query_text or current_status != 'all' or current_priority != 'all' or current_category != 'all' or current_department != 'all' %}
+  <a href="{{ url_for('tickets.index', scope=current_scope) }}" class="text-[13px] font-semibold text-gray-500">Reset</a>
+  {% endif %}
+</form>
+
+{% if current_scope == 'delegated' and not tickets %}
+<div class="text-center py-16 bg-white border-2 border-dashed border-gray-200 rounded-2xl">
+  <h3 class="text-[15px] font-bold text-gray-800 mb-1">No delegated tickets right now</h3>
+  <p class="text-[13px] text-gray-500">Tickets from colleagues actively delegating to you show up here.</p>
+</div>
+{% elif tickets %}
+
+<!-- BOARD VIEW: wraps on smaller screens, never scrolls sideways -->
+<div id="ticket-board-view">
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-5">
+    {% set dot_colors = {'new':'#60a5fa','open':'#818cf8','in_progress':'#f59e0b','waiting':'#fb923c','on_hold':'#a78bfa','resolved':'#10b981','reopened':'#ec4899','closed':'#9ca3af','cancelled':'#f87171'} %}
+    {% for s in statuses %}
+      {% set col_tickets = tickets | selectattr('status', 'equalto', s) | list %}
+      {% if col_tickets %}
+      <div class="flex flex-col gap-3 bg-gray-50/60 rounded-2xl p-3 border border-gray-100">
+        <div class="flex items-center gap-2 px-1">
+          <div class="w-2.5 h-2.5 rounded-full" style="background:{{ dot_colors.get(s,'#9ca3af') }}"></div>
+          <h2 class="text-gray-600 font-semibold text-[13px]">{{ status_labels[s] }}</h2>
+          <span class="bg-white text-gray-600 text-[11px] px-2 py-0.5 rounded-md font-bold ml-1 border border-gray-200">{{ col_tickets|length }}</span>
+        </div>
+        <div class="flex flex-col gap-3">
+          {% for ticket in col_tickets %}
+          <a href="{{ url_for('tickets.detail', ticket_id=ticket.id) }}" class="block bg-white border border-gray-200 rounded-2xl p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:border-gray-300 hover:-translate-y-0.5 transition-all">
+            <div class="text-[11px] font-bold text-[#ff6337] mb-1.5">{{ ticket.ticket_number }}</div>
+            <h3 class="font-semibold text-gray-900 text-[14px] leading-snug mb-3 line-clamp-2">{{ ticket.title }}</h3>
+            <div class="flex items-center gap-2 flex-wrap mb-2">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold {{ priority_badge[ticket.priority] }}">{{ priority_labels[ticket.priority] }}</span>
+              {% set sla = ticket.sla_info() %}
+              {% if sla %}<span class="text-[10px] font-semibold {{ 'text-red-600' if sla.breached else 'text-emerald-600' }}">{{ sla.label }}</span>{% endif %}
+            </div>
+            <div class="pt-2.5 border-t border-gray-50 flex items-center justify-between">
+              {% if ticket.assigned_to %}
+              <div class="flex items-center gap-1.5 text-[11px] text-gray-500">
+                <div class="w-5 h-5 rounded-full bg-gradient-to-br from-[#ff6337] to-[#c8531d] text-white text-[9px] font-bold flex items-center justify-center">{{ ticket.assigned_to.full_name[:1]|upper }}</div>
+                {{ ticket.assigned_to.full_name.split(' ')[0] }}
+              </div>
+              {% elif ticket.assigned_department %}
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700">{{ ticket.assigned_department }}</span>
+              {% else %}<span></span>{% endif %}
+              <span class="text-[10px] text-gray-400">{{ ticket.created_by.full_name.split(' ')[0] if ticket.created_by }}</span>
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    {% endfor %}
+    {% if tickets|length == 0 %}
+    <div class="col-span-full text-center py-16 text-gray-300 text-[13px]">Nothing here</div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- TABLE VIEW -->
+<div id="ticket-table-view" class="hidden bg-white border border-gray-200 rounded-2xl overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="w-full text-[13px]">
+      <thead><tr class="text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100">
+        <th class="p-3.5">Ticket</th><th class="p-3.5">Requester</th>
+        {% if current_scope == 'delegated' %}<th class="p-3.5">Delegated By</th>{% else %}<th class="p-3.5">Assigned</th>{% endif %}
+        <th class="p-3.5">Status</th><th class="p-3.5">Priority</th><th class="p-3.5">SLA</th><th class="p-3.5">Updated</th>
+      </tr></thead>
+      <tbody>
+        {% for ticket in tickets %}
+        <tr class="border-b border-gray-50 hover:bg-gray-50">
+          <td class="p-3.5"><a href="{{ url_for('tickets.detail', ticket_id=ticket.id) }}" class="font-bold text-[#ff6337]">{{ ticket.ticket_number }}</a><div class="text-gray-500 text-[12px]">{{ ticket.title }}</div></td>
+          <td class="p-3.5">{{ ticket.created_by.full_name if ticket.created_by else '—' }}</td>
+          {% if current_scope == 'delegated' %}
+          <td class="p-3.5"><span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700">{{ ticket.delegation_owner }}</span></td>
+          {% else %}
+          <td class="p-3.5">{% if ticket.assigned_to %}{{ ticket.assigned_to.full_name }}{% elif ticket.assigned_department %}<span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700">{{ ticket.assigned_department }}</span>{% else %}—{% endif %}</td>
+          {% endif %}
+          <td class="p-3.5"><span class="px-2 py-0.5 rounded-full text-[11px] font-bold {{ status_badge[ticket.status] }}">{{ status_labels[ticket.status] }}</span></td>
+          <td class="p-3.5"><span class="px-2 py-0.5 rounded-full text-[11px] font-bold {{ priority_badge[ticket.priority] }}">{{ priority_labels[ticket.priority] }}</span></td>
+          <td class="p-3.5">{% set sla = ticket.sla_info() %}{% if sla %}<span class="text-[12px] font-semibold {{ 'text-red-600' if sla.breached else 'text-emerald-600' }}">{{ sla.label }}</span>{% else %}—{% endif %}</td>
+          <td class="p-3.5 text-gray-400">{{ ticket.updated_at | riyadh }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% else %}
+<div class="text-center py-16 bg-white border-2 border-dashed border-gray-200 rounded-2xl">
+  <h3 class="text-[15px] font-bold text-gray-800 mb-1">No tickets found</h3>
+  <p class="text-[13px] text-gray-500 mb-4">Try changing filters or create a new support request.</p>
+  <a href="{{ url_for('tickets.new_ticket') }}" class="inline-flex items-center gap-1.5 px-4 py-2 text-[13px] font-semibold text-white bg-[#ff6337] rounded-lg">Create Ticket</a>
+</div>
+{% endif %}
+
+<script>
+  function setTicketView(view, scopeKey) {
+    document.getElementById('ticket-table-view').classList.toggle('hidden', view !== 'table');
+    document.getElementById('ticket-board-view').classList.toggle('hidden', view !== 'board');
+    document.getElementById('view-btn-table').classList.toggle('bg-white', view === 'table');
+    document.getElementById('view-btn-table').classList.toggle('shadow-sm', view === 'table');
+    document.getElementById('view-btn-table').classList.toggle('text-[#ff6337]', view === 'table');
+    document.getElementById('view-btn-board').classList.toggle('bg-white', view === 'board');
+    document.getElementById('view-btn-board').classList.toggle('shadow-sm', view === 'board');
+    document.getElementById('view-btn-board').classList.toggle('text-[#ff6337]', view === 'board');
+    try { sessionStorage.setItem('kudu_ticket_view_' + scopeKey, view); } catch (e) {}
+  }
+  (function () {
+    let saved = 'board';
+    try { saved = sessionStorage.getItem('kudu_ticket_view_{{ current_scope }}') || 'board'; } catch (e) {}
+    setTicketView(saved, '{{ current_scope }}');
+  })();
+</script>
+{% endblock %}
+

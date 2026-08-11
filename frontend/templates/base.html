@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Kudu Ticketing{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="icon" href="https://play-lh.googleusercontent.com/m-AAl7wF2XWb-k-RnXZgRGWxSweAxY49dz2yDDgbDjmK_2X4bCN-8YSPM21FxjAgXQU">
+  <style>
+    /* Hide Edge/IE native password reveal button.
+   Keep our custom password eye icon. */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+    display: none;
+}
+    * { font-family: 'Inter', sans-serif; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+    .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+    .assignee-picker { position: relative; }
+    .picker-results { position:absolute; z-index:40; left:0; right:0; top:calc(100% + 6px); background:#fff; border:1px solid #e5e7eb; border-radius:14px; box-shadow:0 20px 48px rgba(18,23,43,.14); max-height:230px; overflow-y:auto; }
+    .picker-item { padding:.6rem .85rem; display:flex; justify-content:space-between; align-items:center; gap:.75rem; cursor:pointer; font-size:.86rem; border-bottom:1px solid #f3f4f6; }
+    .picker-item:last-child { border-bottom:none; }
+    .picker-item:hover { background:#fff0e6; }
+    .picker-meta { font-size:.75rem; color:#9ca3af; white-space:nowrap; }
+    .picker-empty { padding:.7rem .85rem; font-size:.85rem; color:#9ca3af; }
+
+    /* Notification dropdown - toggled via .open class, matches original behavior */
+    .notif-dropdown { display: none; }
+    .notif-dropdown.open { display: block; animation: dropIn 0.15s ease; }
+    @keyframes dropIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+  <script>
+    window.CURRENT_USER_ID = {{ current_user.id if current_user.is_authenticated else 'null' }};
+  </script>
+  <script src="{{ url_for('static', filename='App.js') }}"></script>
+</head>
+<body class="bg-[#f7f7f8] text-gray-900">
+
+{% if current_user.is_authenticated %}
+<div class="flex h-screen overflow-hidden">
+
+  <!-- Sidebar -->
+  <aside class="w-[260px] bg-[#fafafa] flex flex-col pt-6 pb-6 border-r border-gray-100 flex-shrink-0 overflow-y-auto">
+
+    <div class="flex items-center gap-3 px-5 mb-5">
+      <div class="w-9 h-9 rounded-xl overflow-hidden flex-shrink-0 shadow-sm">
+        <img src="https://play-lh.googleusercontent.com/m-AAl7wF2XWb-k-RnXZgRGWxSweAxY49dz2yDDgbDjmK_2X4bCN-8YSPM21FxjAgXQU" class="w-full h-full object-cover" alt="Kudu">
+      </div>
+      <div>
+        <div class="text-[15px] font-bold text-gray-900 leading-none">{{ brand_name }}</div>
+        <div class="text-[10px] text-gray-400 uppercase tracking-widest">Ticketing</div>
+      </div>
+    </div>
+
+    <a href="{{ url_for('tickets.profile') }}" class="mx-5 mb-5 flex items-center justify-between p-2 rounded-xl border border-gray-200 bg-white shadow-sm hover:bg-gray-50 transition-colors">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-8 h-8 bg-[#ff6337] rounded-lg flex items-center justify-center text-white text-xs font-bold flex-shrink-0">{{ current_user.full_name[:1]|upper }}</div>
+        <div class="flex flex-col min-w-0">
+          <span class="text-[11px] font-medium text-gray-400 uppercase tracking-wider leading-none mb-1">{{ current_user.department }}</span>
+          <span class="text-[14px] font-semibold text-gray-900 leading-none truncate">{{ current_user.full_name }}</span>
+        </div>
+      </div>
+      <i data-lucide="chevron-right" class="w-4 h-4 text-gray-400 flex-shrink-0"></i>
+    </a>
+
+    <form method="GET" action="{{ url_for('tickets.index') }}" class="px-5 mb-6">
+      <div class="flex items-center bg-gray-100 rounded-xl px-3 py-2 focus-within:ring-2 focus-within:ring-orange-200">
+        <i data-lucide="search" class="w-4 h-4 text-gray-400 mr-2"></i>
+        <input type="text" name="q" placeholder="Search tickets..." class="bg-transparent border-none outline-none text-[13px] text-gray-700 w-full placeholder-gray-400">
+      </div>
+    </form>
+
+    <div class="text-[11px] font-bold text-gray-400 uppercase tracking-wider px-5 mb-2">Workspace</div>
+    <nav class="px-3 space-y-1 mb-4">
+      {% macro navitem(endpoint, href, icon, label, badge=None) %}
+      <a href="{{ href }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium transition-colors
+        {% if request.endpoint == endpoint %}bg-white border border-gray-100 shadow-[0_2px_4px_rgba(0,0,0,0.02)] text-gray-900{% else %}text-gray-500 hover:text-gray-900 hover:bg-gray-100{% endif %}">
+        <i data-lucide="{{ icon }}" class="w-[18px] h-[18px]"></i>
+        <span class="flex-1">{{ label }}</span>
+        {% if badge %}<span class="bg-gray-100 text-gray-700 text-[11px] font-bold px-1.5 py-0.5 rounded-md">{{ badge }}</span>{% endif %}
+      </a>
+      {% endmacro %}
+
+      {{ navitem('tickets.dashboard', url_for('tickets.dashboard'), 'layout-dashboard', 'Dashboard') }}
+      {{ navitem('tickets.index', url_for('tickets.index') + '?scope=mine', 'ticket', 'My Tickets') }}
+      <a href="{{ url_for('tickets.index') }}?scope=department" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors">
+        <i data-lucide="building-2" class="w-[18px] h-[18px]"></i>
+        {{ current_user.department }} Queue
+      </a>
+      {% if current_user.is_admin %}
+      <a href="{{ url_for('tickets.index') }}?scope=all" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors">
+        <i data-lucide="globe" class="w-[18px] h-[18px]"></i>
+        All Departments
+      </a>
+      {% endif %}
+      {{ navitem('tickets.new_ticket', url_for('tickets.new_ticket'), 'plus-circle', 'New Ticket') }}
+      {{ navitem('team.overview', url_for('team.overview'), 'users', 'Team') }}
+    </nav>
+
+    <div class="h-px bg-gray-200 mx-5 mb-4"></div>
+
+    <div class="text-[11px] font-bold text-gray-400 uppercase tracking-wider px-5 mb-2">Account</div>
+    <nav class="px-3 space-y-1 mb-4">
+      {{ navitem('tickets.profile', url_for('tickets.profile'), 'user-cog', 'Profile & Delegation') }}
+      {{ navitem('tickets.notifications', url_for('tickets.notifications'), 'bell', 'Notifications', unread_notif_count if unread_notif_count and unread_notif_count > 0 else None) }}
+    </nav>
+
+    {% if current_user.is_admin %}
+    <div class="h-px bg-gray-200 mx-5 mb-4"></div>
+    <div class="text-[11px] font-bold text-gray-400 uppercase tracking-wider px-5 mb-2">Administration</div>
+    <nav class="px-3 space-y-1">
+      {{ navitem('admin.panel', url_for('admin.panel'), 'shield', 'Admin Panel') }}
+      {{ navitem('admin.delegations', url_for('admin.delegations'), 'git-branch', 'Delegations') }}
+    </nav>
+    {% endif %}
+
+    <div class="flex-1"></div>
+    <div class="px-5 pt-4 mt-4 border-t border-gray-200 text-[11px] text-gray-400 text-center">Kudu Ticketing &middot; v3</div>
+  </aside>
+
+<!-- Main -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <header class="pt-6 px-8 pb-2 flex-shrink-0">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="text-[13px] text-gray-500 mb-1">{% block crumb %}Kudu{% endblock %}</div>
+          <h1 class="text-[26px] font-bold text-gray-900 tracking-tight">{% block page_title %}Dashboard{% endblock %}</h1>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="relative">
+            <button type="button" id="notif-bell" onclick="toggleNotifDropdown(event)"
+              class="relative flex items-center justify-center w-9 h-9 rounded-lg bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100 transition-colors">
+              <i data-lucide="bell" class="w-[16px] h-[16px]"></i>
+              {% if unread_notif_count and unread_notif_count > 0 %}
+              <span class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-[16px] px-1 flex items-center justify-center border-2 border-white">{{ unread_notif_count }}</span>
+              {% endif %}
+            </button>
+            <div id="notif-dropdown" class="notif-dropdown absolute top-[calc(100%+10px)] right-0 w-[340px] max-h-[420px] overflow-y-auto bg-white border border-gray-200 rounded-2xl shadow-xl z-50">
+              <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                <strong class="text-[13px]">Notifications</strong>
+                {% if unread_notif_count and unread_notif_count > 0 %}
+                <form method="POST" action="{{ url_for('tickets.dismiss_all_notifications') }}">
+                  <button type="submit" class="text-[12px] font-semibold text-[#ff6337] hover:underline">Clear all</button>
+                </form>
+                {% endif %}
+              </div>
+              {% if unread_notifications %}
+                {% for n in unread_notifications %}
+                <a href="{{ url_for('tickets.open_notification', notification_id=n.id) }}" class="flex gap-2.5 items-start px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                  <span class="w-[7px] h-[7px] rounded-full bg-[#ff6337] mt-1.5 flex-shrink-0"></span>
+                  <span class="flex flex-col gap-0.5">
+                    <strong class="text-[13px] text-gray-900">{{ n.title }}</strong>
+                    <span class="text-[12px] text-gray-500">{{ n.message }}</span>
+                  </span>
+                </a>
+                {% endfor %}
+                <a href="{{ url_for('tickets.notifications') }}" class="block text-center py-3 text-[12px] font-semibold text-[#ff6337] hover:bg-gray-50">View all</a>
+              {% else %}
+                <div class="px-4 py-8 text-center text-[13px] text-gray-400">You're all caught up.</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <a href="{{ url_for('tickets.new_ticket') }}" class="flex items-center gap-2 px-3.5 py-2 text-[13px] font-semibold text-white bg-[#ff6337] rounded-lg hover:bg-[#e5522c] transition-colors shadow-sm">
+            <i data-lucide="plus" class="w-[14px] h-[14px]"></i> New Ticket
+          </a>
+
+          <a href="{{ url_for('auth.logout') }}" title="Sign out" class="flex items-center justify-center w-9 h-9 rounded-lg bg-gray-50 border border-gray-200 text-gray-500 hover:bg-gray-100 transition-colors">
+            <i data-lucide="log-out" class="w-[15px] h-[15px]"></i>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <main class="flex-1 overflow-y-auto px-8 pb-8 pt-4">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flex flex-col gap-2 mb-4">
+          {% for category, message in messages %}
+          {% set colors = {'success':'bg-emerald-50 text-emerald-700 border-emerald-100','error':'bg-red-50 text-red-700 border-red-100','warning':'bg-amber-50 text-amber-700 border-amber-100','info':'bg-blue-50 text-blue-700 border-blue-100'} %}
+          <div class="px-4 py-2.5 rounded-xl text-[13px] font-medium border {{ colors.get(category, colors['info']) }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+
+{% else %}
+<div class="min-h-screen flex items-center justify-center p-8"
+     style="background: radial-gradient(circle at 12% 8%, rgba(255,99,55,0.30) 0%, transparent 45%), radial-gradient(circle at 90% 90%, rgba(37,84,214,0.22) 0%, transparent 50%), linear-gradient(160deg, #12172b 0%, #0a0e1c 100%);">
+  <div class="w-full max-w-[920px]">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      <div class="flex flex-col gap-2 mb-4 max-w-[440px] mx-auto">
+        {% for category, message in messages %}
+        {% set colors = {'success':'bg-emerald-50 text-emerald-700 border-emerald-100','error':'bg-red-50 text-red-700 border-red-100','warning':'bg-amber-50 text-amber-700 border-amber-100','info':'bg-blue-50 text-blue-700 border-blue-100'} %}
+        <div class="px-4 py-2.5 rounded-xl text-[13px] font-medium border {{ colors.get(category, colors['info']) }} bg-white">{{ message }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    {% endwith %}
+    {% block auth_content %}{% endblock %}
+  </div>
+</div>
+{% endif %}
+
+<script>
+  lucide.createIcons();
+  document.addEventListener('click', function () {
+    setTimeout(() => lucide.createIcons(), 0);
+  });
+</script>
+</body>
+</html>

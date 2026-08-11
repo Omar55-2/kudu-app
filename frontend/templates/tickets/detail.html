@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+{% block crumb %}Tickets{% endblock %}
+{% block page_title %}{{ ticket.ticket_number }}{% endblock %}
+{% block title %}{{ ticket.ticket_number }} &mdash; Kudu Ticketing{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-5">
+  <p class="text-[13px] text-gray-500">{{ ticket.title }}</p>
+  <a href="{{ url_for('tickets.index') }}" class="text-[13px] font-semibold text-gray-500 hover:text-gray-800">&larr; Back to list</a>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <div class="lg:col-span-2 flex flex-col gap-5">
+
+    <section class="bg-white border border-gray-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+      <div class="flex flex-wrap gap-6 pb-4 mb-4 border-b border-gray-50">
+        <div><div class="text-[10px] font-bold text-gray-400 uppercase mb-1">Status</div><span class="px-2 py-0.5 rounded-full text-[11px] font-bold {{ status_badge[ticket.status] }}">{{ status_labels[ticket.status] }}</span></div>
+        <div><div class="text-[10px] font-bold text-gray-400 uppercase mb-1">Priority</div><span class="px-2 py-0.5 rounded-full text-[11px] font-bold {{ priority_badge[ticket.priority] }}">{{ priority_labels[ticket.priority] }}</span></div>
+        <div><div class="text-[10px] font-bold text-gray-400 uppercase mb-1">Category</div><span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-gray-100 text-gray-600">{{ ticket.category|title }}</span></div>
+        <div><div class="text-[10px] font-bold text-gray-400 uppercase mb-1">Assigned</div>
+          {% if ticket.assigned_to %}<span class="text-[13px] font-semibold text-gray-800">{{ ticket.assigned_to.full_name }}</span>
+          {% elif ticket.assigned_department %}<span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700">{{ ticket.assigned_department }} queue</span>
+          {% else %}<span class="text-[13px] text-gray-400">Unassigned</span>{% endif %}
+        </div>
+        {% set sla = ticket.sla_info() %}
+        {% if sla %}<div><div class="text-[10px] font-bold text-gray-400 uppercase mb-1">SLA</div><span class="text-[12px] font-bold {{ 'text-red-600' if sla.breached else 'text-emerald-600' }}">{{ sla.label }}</span></div>{% endif %}
+      </div>
+
+      {% if can_claim %}
+      <div class="flex items-center justify-between gap-3 bg-orange-50 border border-orange-100 text-[#c8531d] px-4 py-3 rounded-xl mb-4 text-[13px]">
+        <span>This ticket is sitting in the <strong>{{ ticket.assigned_department }}</strong> queue, unclaimed.</span>
+        <form method="POST" action="{{ url_for('tickets.claim', ticket_id=ticket.id) }}">
+          <button type="submit" class="px-3 py-1.5 bg-emerald-600 text-white text-[12px] font-semibold rounded-lg hover:bg-emerald-700">Claim It</button>
+        </form>
+      </div>
+      {% endif %}
+
+      <div class="grid grid-cols-2 gap-3 bg-gray-50 rounded-xl p-4 mb-4 text-[12px]">
+        <div><span class="text-gray-400">Requester</span><div class="font-semibold text-gray-800">{{ ticket.created_by.full_name if ticket.created_by else '—' }}</div></div>
+        <div><span class="text-gray-400">Created</span><div class="font-semibold text-gray-800">{{ ticket.created_at | riyadh }}</div></div>
+        <div><span class="text-gray-400">Due (SLA)</span><div class="font-semibold text-gray-800">{{ ticket.due_date | riyadh if ticket.due_date else 'N/A' }}</div></div>
+        <div><span class="text-gray-400">Last updated</span><div class="font-semibold text-gray-800">{{ ticket.updated_at | riyadh }}</div></div>
+      </div>
+      <p class="text-[14px] text-gray-700 leading-relaxed whitespace-pre-wrap">{{ ticket.description }}</p>
+    </section>
+
+    <!-- Comments — modern chat style -->
+    <section class="bg-white border border-gray-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+      <h3 class="text-[14px] font-bold text-gray-900 mb-4">Comments</h3>
+      <div class="flex flex-col gap-3 mb-4">
+        {% for comment in comments %}
+        <div class="flex gap-3">
+          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-[#ff6337] to-[#c8531d] text-white text-[11px] font-bold flex items-center justify-center flex-shrink-0">{{ (comment.user.full_name[:1]|upper) if comment.user else '?' }}</div>
+          <div class="flex-1 bg-gray-50 rounded-2xl rounded-tl-sm px-4 py-2.5">
+            <div class="flex items-baseline justify-between gap-2 mb-0.5">
+              <strong class="text-[13px] text-gray-900">{{ comment.user.full_name if comment.user else 'Unknown' }}</strong>
+              <time class="text-[11px] text-gray-400">{{ comment.created_at | riyadh }}</time>
+            </div>
+            <p class="text-[13px] text-gray-700">{{ comment.body }}</p>
+          </div>
+        </div>
+        {% else %}
+        <p class="text-[13px] text-gray-400">No comments yet.</p>
+        {% endfor %}
+      </div>
+      <form method="POST" action="{{ url_for('tickets.add_comment', ticket_id=ticket.id) }}" class="pt-4 border-t border-gray-50">
+        <textarea name="body" rows="3" placeholder="Update the requester or team..." required
+          class="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-[14px] focus:outline-none focus:ring-2 focus:ring-[#ff6337]/20 mb-2"></textarea>
+        <button type="submit" class="px-4 py-2 bg-[#ff6337] text-white text-[13px] font-semibold rounded-xl hover:bg-[#e5522c]">Post Comment</button>
+      </form>
+    </section>
+
+    <section class="bg-white border border-gray-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+      <h3 class="text-[14px] font-bold text-gray-900 mb-4">Attachments</h3>
+      <ul class="flex flex-col gap-2 mb-4">
+        {% for a in attachments %}
+        <li class="flex items-center gap-2.5 text-[13px] py-2 border-b border-gray-50 last:border-0">
+          <i data-lucide="paperclip" class="w-4 h-4 text-gray-400"></i>
+          <a href="{{ url_for('tickets.download_attachment', attachment_id=a.id) }}" class="text-[#ff6337] font-semibold hover:underline">{{ a.file_name }}</a>
+          <span class="text-gray-400">by {{ a.uploaded_by.full_name if a.uploaded_by else 'Unknown' }}</span>
+        </li>
+        {% else %}
+        <li class="text-[13px] text-gray-400">No attachments yet.</li>
+        {% endfor %}
+      </ul>
+      <form method="POST" action="{{ url_for('tickets.upload_attachment', ticket_id=ticket.id) }}" enctype="multipart/form-data" class="flex items-center gap-2 pt-3 border-t border-gray-50">
+        <input type="file" name="file" required class="text-[13px] flex-1">
+        <button type="submit" class="px-3.5 py-2 border border-gray-200 text-gray-700 text-[13px] font-semibold rounded-xl hover:bg-gray-50">Upload</button>
+      </form>
+    </section>
+
+    <!-- Activity — modern timeline -->
+    <section class="bg-white border border-gray-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+      <h3 class="text-[14px] font-bold text-gray-900 mb-4">Activity History</h3>
+      <ol class="relative border-l-2 border-gray-100 ml-2">
+        {% for item in history %}
+        <li class="mb-5 ml-4">
+          <span class="absolute w-2.5 h-2.5 bg-[#ff6337] rounded-full -left-[5.5px] mt-1.5"></span>
+          <strong class="text-[13px] text-gray-900">{{ item.action.replace('_',' ')|title }}</strong>
+          {% if item.old_value and item.new_value %}<div class="text-[12px] text-gray-500">{{ item.old_value }} → {{ item.new_value }}</div>
+          {% elif item.new_value %}<div class="text-[12px] text-gray-500">Set to {{ item.new_value }}</div>
+          {% elif item.old_value %}<div class="text-[12px] text-gray-500">Cleared (was {{ item.old_value }})</div>{% endif %}
+          <div class="text-[11px] text-gray-400 mt-0.5">{{ item.user.full_name if item.user else 'System' }} · {{ item.created_at | riyadh }}</div>
+        </li>
+        {% else %}
+        <li class="text-[13px] text-gray-400 ml-4">No history recorded.</li>
+        {% endfor %}
+      </ol>
+    </section>
+  </div>
+
+  <aside class="flex flex-col gap-5">
+    {% if can_update_status %}
+    <section class="bg-white border border-gray-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+      <h3 class="text-[14px] font-bold text-gray-900 mb-3">Update Status</h3>
+      <form method="POST" action="{{ url_for('tickets.update', ticket_id=ticket.id) }}">
+        {% set allowed_next = valid_transitions.get(ticket.status, []) %}
+        <select name="status" class="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-[14px] bg-white mb-2">
+          <option value="{{ ticket.status }}" selected>{{ status_labels[ticket.status] }} (current)</option>
+          {% if current_user.is_admin %}
+            {% for s in statuses %}{% if s != ticket.status %}<option value="{{ s }}">{{ status_labels[s] }}</option>{% endif %}{% endfor %}
+          {% else %}
+            {% for s in allowed_next %}<option value="{{ s }}">{{ status_labels[s] }}</option>{% endfor %}
+          {% endif %}
+        </select>
+        <p class="text-[12px] text-gray-400 mb-3">{{ status_descriptions[ticket.status] }}</p>
+        <button type="submit" class="w-full py-2.5 bg-[#ff6337] text-white text-[13px] font-semibold rounded-xl hover:bg-[#e5522c]">Save Status</button>
+      </form>
+    </section>
+    {% else %}
+    <section class="bg-white border border-gray-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+      <h3 class="text-[14px] font-bold text-gray-900 mb-3">Status</h3>
+      <p class="px-3.5 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-[13px]">{{ status_labels[ticket.status] }}</p>
+      <p class="text-[12px] text-gray-400 mt-2">Only the assignee or an admin can change this.</p>
+    </section>
+    {% endif %}
+
+    {% if current_user.is_admin %}
+    <section class="bg-white border border-gray-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+      <h3 class="text-[14px] font-bold text-gray-900 mb-3">Reassign (Admin)</h3>
+      <form method="POST" action="{{ url_for('tickets.update', ticket_id=ticket.id) }}" class="flex flex-col gap-3">
+        <select name="priority" class="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-[14px] bg-white">
+          {% for p in priorities %}<option value="{{ p }}" {% if ticket.priority==p %}selected{% endif %}>{{ priority_labels[p] }} — {{ sla_labels[p] }} SLA</option>{% endfor %}
+        </select>
+        <select id="ra_dept_filter" onchange="filterPickerByDepartment('assignee', this.value)" class="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-[14px] bg-white">
+          <option value="">All departments</option>
+          {% for dept in departments %}<option value="{{ dept }}" {% if ticket.assigned_to and ticket.assigned_to.department==dept %}selected{% endif %}>{{ dept }}</option>{% endfor %}
+        </select>
+
+        <button type="button" id="smart_assign_btn" class="text-[12px] font-semibold text-[#ff6337] hover:underline flex items-center gap-1 -mt-1">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Find Best Assignee
+        </button>
+        <div id="smart_assign_results" class="hidden flex flex-col gap-2"></div>
+
+        <div class="assignee-picker flex gap-2">
+          <input type="text" id="assignee_search" placeholder="Search by name or email..." autocomplete="off" value="{{ ticket.assigned_to.full_name if ticket.assigned_to else '' }}"
+            class="flex-1 px-3.5 py-2.5 border border-gray-200 rounded-xl text-[14px]">
+          <button type="button" id="assignee_auto_assign_btn" class="px-3 py-2.5 bg-amber-400 text-amber-950 text-[12px] font-semibold rounded-xl whitespace-nowrap hover:bg-amber-500">⚡</button>
+          <input type="hidden" name="assigned_to_id" id="assignee_value" value="{{ ticket.assigned_to_id or '' }}">
+          <div id="assignee_results" class="picker-results hidden"></div>
+        </div>
+        <select id="assigned_department" name="assigned_department" class="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-[14px] bg-white">
+          <option value="">— leave assignment above —</option>
+          {% for dept in departments %}<option value="{{ dept }}" {% if ticket.assigned_department==dept and not ticket.assigned_to %}selected{% endif %}>{{ dept }}</option>{% endfor %}
+        </select>
+        <p class="text-[11px] text-gray-400">Picking a department clears any person selected above, and vice versa.</p>
+        <button type="submit" class="w-full py-2.5 bg-[#ff6337] text-white text-[13px] font-semibold rounded-xl hover:bg-[#e5522c]">Save Assignment</button>
+      </form>
+    </section>
+    {% endif %}
+
+    <section class="bg-white border border-gray-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+      <h3 class="text-[14px] font-bold text-gray-900 mb-3">Status Reference</h3>
+      <ul class="flex flex-col gap-2.5">
+        {% for key, label in status_labels.items() %}
+        <li class="flex items-start gap-2.5">
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold {{ status_badge[key] }} flex-shrink-0">{{ label }}</span>
+          <span class="text-[12px] text-gray-500">{{ status_descriptions[key] }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    {% if current_user.is_admin %}
+    <section class="bg-white border border-red-100 rounded-2xl p-5">
+      <h3 class="text-[14px] font-bold text-red-700 mb-3">Danger Zone</h3>
+      <form method="POST" action="{{ url_for('tickets.delete_ticket', ticket_id=ticket.id) }}" onsubmit="return confirm('Permanently delete this ticket?');">
+        <button type="submit" class="w-full py-2.5 border border-red-200 text-red-600 text-[13px] font-semibold rounded-xl hover:bg-red-50">Delete Ticket</button>
+      </form>
+    </section>
+    {% endif %}
+  </aside>
+</div>
+
+{% if current_user.is_admin %}
+<script>
+  initAssigneePicker('assignee', {{ employees_json | tojson }});
+  initSmartAssign('smart_assign_btn', 'smart_assign_results', 'ra_dept_filter', 'assignee_value', 'assignee_search', {{ ticket.assigned_to_id or 'null' }});
+  (function () {
+    const deptSel = document.getElementById('assigned_department');
+    const search = document.getElementById('assignee_search');
+    const value = document.getElementById('assignee_value');
+    const results = document.getElementById('assignee_results');
+    const autoBtn = document.getElementById('assignee_auto_assign_btn');
+    function clearPerson(){ if(value) value.value=''; if(search) search.value=''; }
+    function clearDept(){ if(deptSel) deptSel.value=''; }
+    if (deptSel) deptSel.addEventListener('change', () => { if (deptSel.value) clearPerson(); });
+    if (search) search.addEventListener('input', clearDept);
+    if (results) results.addEventListener('click', clearDept);
+    if (autoBtn) autoBtn.addEventListener('click', clearDept);
+  })();
+</script>
+{% endif %}
+{% endblock %}

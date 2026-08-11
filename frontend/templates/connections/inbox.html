@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block page_title %}Connections{% endblock %}
+{% block title %}Connections &mdash; Kudu Ticketing{% endblock %}
+
+{% block content %}
+<div class="page-actions">
+  <div>
+    <h1 class="page-heading">Connections</h1>
+    <p class="page-sub">Direct messages with your colleagues.</p>
+  </div>
+</div>
+
+<div class="grid-2">
+  <section class="panel">
+    <h3 class="section-title">Start a conversation</h3>
+    <form method="GET" action="" id="start-thread-form" onsubmit="return goToThread(event)">
+      <div class="form-group assignee-picker">
+        <label for="msg_to_search">Message a colleague</label>
+        <input type="text" id="msg_to_search" placeholder="Search by name or email..." autocomplete="off">
+        <input type="hidden" id="msg_to_value" name="recipient_id">
+        <div id="msg_to_results" class="picker-results" style="display:none;"></div>
+      </div>
+      <button type="submit" class="btn btn-primary">Open Conversation</button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h3 class="section-title">Conversations</h3>
+    {% if threads %}
+    <ul class="simple-list">
+      {% for t in threads %}
+      <li>
+        <a href="{{ url_for('messages.thread', other_id=t.other.id) }}" style="display:flex;justify-content:space-between;width:100%;align-items:center;">
+          <span>
+            <strong>{{ t.other.full_name }}</strong>
+            <span class="muted" style="display:block;">{{ t.last.body[:60] }}{% if t.last.body|length > 60 %}&hellip;{% endif %}</span>
+          </span>
+          {% if t.unread > 0 %}<span class="badge badge-waiting">{{ t.unread }} new</span>{% endif %}
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted">No conversations yet. Start one on the left.</p>
+    {% endif %}
+  </section>
+</div>
+
+<script>
+  const msgEmployees = {{ employees_json | tojson }};
+  initAssigneePicker('msg_to', msgEmployees);
+
+  function goToThread(e) {
+    e.preventDefault();
+    const id = document.getElementById('msg_to_value').value;
+    if (!id) { alert('Please search and select a colleague first.'); return false; }
+    window.location.href = "{{ url_for('messages.inbox') }}" + id;
+    return false;
+  }
+</script>
+{% endblock %}

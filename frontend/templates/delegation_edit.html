@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block crumb %}Account{% endblock %}
+{% block page_title %}Edit Delegation{% endblock %}
+{% block title %}Edit Delegation &mdash; Kudu Ticketing{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-5">
+  <p class="text-[13px] text-gray-500">Times are shown in your local time, converted to UTC automatically.</p>
+  <a href="{{ back_url }}" class="text-[13px] font-semibold text-gray-500 hover:text-gray-800">&larr; Back</a>
+</div>
+
+<section class="bg-white border border-gray-200 rounded-2xl p-6 shadow-[0_1px_2px_rgba(0,0,0,0.03)] max-w-[560px]">
+  <div class="grid grid-cols-2 gap-4 bg-gray-50 rounded-xl p-4 mb-5 text-[13px]">
+    <div><span class="text-gray-400 block">Delegator</span><strong>{{ delegation.delegator.full_name }}</strong></div>
+    <div><span class="text-gray-400 block">Current status</span><strong>{{ delegation.status_label()|title }}</strong></div>
+  </div>
+  <form method="POST" action="{{ submit_url }}" id="edit-delegation-form" class="flex flex-col gap-3">
+    <div class="assignee-picker">
+      <input type="text" id="delegatee_search" placeholder="Search by name or email..." autocomplete="off" value="{{ delegation.delegatee.full_name }}"
+        class="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-[14px]">
+      <input type="hidden" id="delegatee_value" name="delegatee_id" value="{{ delegation.delegatee_id }}">
+      <div id="delegatee_results" class="picker-results hidden"></div>
+    </div>
+    <div class="grid grid-cols-2 gap-3">
+      <div><label class="block text-[11px] font-semibold text-gray-500 mb-1">Start</label>
+        <input type="datetime-local" id="start_time_local" required class="w-full px-3 py-2 border border-gray-200 rounded-xl text-[13px]">
+        <input type="hidden" id="start_time" name="start_time"></div>
+      <div><label class="block text-[11px] font-semibold text-gray-500 mb-1">End</label>
+        <input type="datetime-local" id="end_time_local" required class="w-full px-3 py-2 border border-gray-200 rounded-xl text-[13px]">
+        <input type="hidden" id="end_time" name="end_time"></div>
+    </div>
+    <div class="flex gap-3 pt-1">
+      <button type="submit" class="px-5 py-2.5 bg-[#ff6337] text-white text-[14px] font-semibold rounded-xl hover:bg-[#e5522c]">Save Changes</button>
+      <a href="{{ back_url }}" class="px-5 py-2.5 border border-gray-200 text-gray-600 text-[14px] font-semibold rounded-xl hover:bg-gray-50">Cancel</a>
+    </div>
+  </form>
+</section>
+
+<script>
+  const editEmployees = {{ employees_json | tojson }};
+  initAssigneePicker('delegatee', editEmployees);
+  (function () {
+    const startUtc = new Date("{{ start_iso }}"), endUtc = new Date("{{ end_iso }}");
+    function toLocal(d){const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes());}
+    document.getElementById('start_time_local').value = toLocal(startUtc);
+    document.getElementById('end_time_local').value = toLocal(endUtc);
+  })();
+  document.getElementById('edit-delegation-form').addEventListener('submit', function (e) {
+    if (!document.getElementById('delegatee_value').value) { e.preventDefault(); alert('Please select a colleague.'); return; }
+    const s = document.getElementById('start_time_local').value, en = document.getElementById('end_time_local').value;
+    if (!s || !en) { e.preventDefault(); alert('Please pick both dates.'); return; }
+    document.getElementById('start_time').value = new Date(s).toISOString();
+    document.getElementById('end_time').value = new Date(en).toISOString();
+  });
+</script>
+{% endblock %}

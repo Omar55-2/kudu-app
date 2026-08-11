@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block crumb %}Team{% endblock %}
+{% block page_title %}Team Overview{% endblock %}
+{% block title %}Team Overview &mdash; Kudu Ticketing{% endblock %}
+
+{% block content %}
+{% include "team/_nav.html" %}
+
+<div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+  {% set cards = [
+    ('Team Members', stats.members, 'users', 'text-[#ff6337]', 'bg-orange-50'),
+    ('Available', stats.available, 'check-circle', 'text-emerald-600', 'bg-emerald-50'),
+    ('Open Tickets', stats.open_tickets, 'ticket', 'text-blue-600', 'bg-blue-50'),
+    ('Critical', stats.critical_tickets, 'alert-triangle', 'text-red-600', 'bg-red-50'),
+    ('SLA At Risk', stats.sla_at_risk, 'clock-alert', 'text-amber-600', 'bg-amber-50'),
+    ('Unassigned', stats.unassigned, 'user-x', 'text-violet-600', 'bg-violet-50'),
+  ] %}
+  {% for label, value, icon, tcolor, bg in cards %}
+  <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+    <div class="flex items-center justify-between mb-3">
+      <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">{{ label }}</span>
+      <div class="w-8 h-8 rounded-lg {{ bg }} {{ tcolor }} flex items-center justify-center"><i data-lucide="{{ icon }}" class="w-4 h-4"></i></div>
+    </div>
+    <strong class="text-[24px] font-bold text-gray-900">{{ value }}</strong>
+  </div>
+  {% endfor %}
+</div>
+
+{% if current_user.is_admin and alerts %}
+<div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] mb-6">
+  <h2 class="text-[15px] font-bold text-gray-900 mb-3">Team Alerts</h2>
+  <div class="flex flex-col gap-2">
+    {% for a in alerts %}
+    {% set style = {'critical':'bg-red-50 text-red-700 border-red-100','warning':'bg-amber-50 text-amber-700 border-amber-100','info':'bg-blue-50 text-blue-700 border-blue-100'} %}
+    <div class="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-[13px] font-medium border {{ style[a.level] }}">
+      <i data-lucide="{{ 'alert-octagon' if a.level == 'critical' else ('alert-triangle' if a.level == 'warning' else 'info') }}" class="w-4 h-4 flex-shrink-0"></i>
+      {{ a.text }}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+  <h2 class="text-[15px] font-bold text-gray-900 mb-1">Team Workload</h2>
+  <p class="text-[12px] text-gray-400 mb-4">Weighted by ticket priority and SLA pressure, out of a 20-point capacity per person.</p>
+  <div class="flex flex-col gap-3">
+    {% for w in workloads %}
+    {% set bar_color = 'bg-emerald-500' if w.state == 'Available' else ('bg-blue-500' if w.state == 'Normal' else ('bg-amber-500' if w.state == 'High workload' else 'bg-red-500')) %}
+    <a href="{{ url_for('team.member_profile', user_id=w.user.id) }}" class="flex items-center gap-4 hover:bg-gray-50 rounded-xl p-2 -m-2 transition-colors">
+      <div class="w-9 h-9 rounded-full bg-gradient-to-br from-[#ff6337] to-[#c8531d] text-white text-[12px] font-bold flex items-center justify-center flex-shrink-0">{{ w.user.full_name[:1]|upper }}</div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-[13px] font-semibold text-gray-900 truncate">{{ w.user.full_name }}</span>
+          <span class="text-[12px] font-semibold text-gray-500 flex-shrink-0">
+            {% if current_user.is_admin %}{{ w.points }} / {{ w.capacity }} pts &middot; {% endif %}{{ w.pct }}%
+          </span>
+        </div>
+        <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+          <div class="h-full {{ bar_color }} rounded-full" style="width:{{ [w.pct, 100]|min }}%"></div>
+        </div>
+      </div>
+      <span class="text-[11px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 {{ 'bg-emerald-50 text-emerald-700' if w.state == 'Available' else ('bg-blue-50 text-blue-700' if w.state == 'Normal' else ('bg-amber-50 text-amber-700' if w.state == 'High workload' else 'bg-red-50 text-red-700')) }}">{{ w.state }}</span>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

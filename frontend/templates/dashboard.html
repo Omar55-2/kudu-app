@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block crumb %}Overview{% endblock %}
+{% block page_title %}Welcome back, {{ current_user.full_name.split(' ')[0] }}{% endblock %}
+{% block title %}Dashboard &mdash; Kudu Ticketing{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+  {% set cards = [
+    ('Tickets', stats.total, 'ticket', 'text-[#ff6337]', 'bg-orange-50', 'border-[#ff6337]'),
+    ('New', stats.by_status.get('new', 0), 'sparkle', 'text-violet-600', 'bg-violet-50', 'border-violet-500'),
+    ('Active', stats.open, 'activity', 'text-emerald-600', 'bg-emerald-50', 'border-emerald-500'),
+    ('Critical / Urgent', stats.by_priority.get('critical', 0) + stats.by_priority.get('urgent', 0), 'alert-triangle', 'text-amber-600', 'bg-amber-50', 'border-amber-500'),
+    ('SLA Breached', stats.breached, 'clock-alert', 'text-red-600', 'bg-red-50', 'border-red-500'),
+  ] %}
+ {% for label, value, icon, tcolor, bg, topcolor in cards %}
+<div
+  class="bg-white border border-gray-200 rounded-2xl p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)]"
+  style="border-top-width:4px; border-top-color: {{ topcolor }};"
+  data-card
+>
+    <div class="flex items-center justify-between mb-3">
+      <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">{{ label }}</span>
+      <div class="w-8 h-8 rounded-lg {{ bg }} {{ tcolor }} flex items-center justify-center"><i data-lucide="{{ icon }}" class="w-4 h-4"></i></div>
+    </div>
+    <strong class="text-[26px] font-bold text-gray-900">{{ value }}</strong>
+  </div>
+  {% endfor %}
+</div>
+
+<style>
+  .grid-cols-2.md\:grid-cols-5 > div:nth-child(1) { border-top: 4px solid #ff6337; }
+  .grid-cols-2.md\:grid-cols-5 > div:nth-child(2) { border-top: 4px solid #7c3aed; }
+  .grid-cols-2.md\:grid-cols-5 > div:nth-child(3) { border-top: 4px solid #10b981; }
+  .grid-cols-2.md\:grid-cols-5 > div:nth-child(4) { border-top: 4px solid #f59e0b; }
+  .grid-cols-2.md\:grid-cols-5 > div:nth-child(5) { border-top: 4px solid #ef4444; }
+</style>
+
+<div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] mb-6">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-[15px] font-bold text-gray-900">Recent Activity</h2>
+    <a href="{{ url_for('tickets.index') }}" class="text-[12px] font-semibold text-[#ff6337]">View all</a>
+  </div>
+  {% if recent %}
+  <div class="overflow-x-auto">
+    <table class="w-full text-[13px]">
+      <thead><tr class="text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100">
+        <th class="pb-2.5">Ticket</th><th class="pb-2.5">Status</th><th class="pb-2.5">Priority</th><th class="pb-2.5">SLA</th>
+      </tr></thead>
+      <tbody>
+        {% for ticket in recent %}
+        <tr class="border-b border-gray-50 hover:bg-gray-50">
+          <td class="py-3"><a href="{{ url_for('tickets.detail', ticket_id=ticket.id) }}" class="font-semibold text-gray-800 hover:text-[#ff6337]">{{ ticket.ticket_number }} — {{ ticket.title }}</a></td>
+          <td><span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold {{ status_badge[ticket.status] }}"><span class="w-1.5 h-1.5 rounded-full {{ status_dot[ticket.status] }}"></span>{{ status_labels[ticket.status] }}</span></td>
+          <td><span class="px-2 py-0.5 rounded-full text-[11px] font-bold {{ priority_badge[ticket.priority] }}">{{ priority_labels[ticket.priority] }}</span></td>
+          <td>{% set sla = ticket.sla_info() %}{% if sla %}<span class="text-[12px] font-semibold {{ 'text-red-600' if sla.breached else 'text-emerald-600' }}">{{ sla.label }}</span>{% else %}—{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="text-center py-10 text-gray-400 text-[13px]">No tickets yet. <a href="{{ url_for('tickets.new_ticket') }}" class="text-[#ff6337] font-semibold">Create one</a></div>
+  {% endif %}
+</div>
+
+{% if delegated_recent %}
+<div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-[15px] font-bold text-gray-900">Tickets You're Covering</h2>
+    <a href="{{ url_for('tickets.index', scope='delegated') }}" class="text-[12px] font-semibold text-[#ff6337]">View all</a>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full text-[13px]">
+      <thead><tr class="text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100">
+        <th class="pb-2.5">Ticket</th><th class="pb-2.5">Delegated By</th><th class="pb-2.5">Status</th><th class="pb-2.5">Priority</th>
+      </tr></thead>
+      <tbody>
+        {% for ticket in delegated_recent %}
+        <tr class="border-b border-gray-50 hover:bg-gray-50">
+          <td class="py-3"><a href="{{ url_for('tickets.detail', ticket_id=ticket.id) }}" class="font-semibold text-gray-800">{{ ticket.ticket_number }} — {{ ticket.title }}</a></td>
+          <td><span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700">{{ ticket.delegation_owner }}</span></td>
+          <td><span class="px-2 py-0.5 rounded-full text-[11px] font-bold {{ status_badge[ticket.status] }}">{{ status_labels[ticket.status] }}</span></td>
+          <td><span class="px-2 py-0.5 rounded-full text-[11px] font-bold {{ priority_badge[ticket.priority] }}">{{ priority_labels[ticket.priority] }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

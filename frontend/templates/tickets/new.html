@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block crumb %}Tickets{% endblock %}
+{% block page_title %}Create Support Ticket{% endblock %}
+{% block title %}New Ticket &mdash; Kudu Ticketing{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <section class="lg:col-span-2 bg-white border border-gray-200 rounded-2xl p-6 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+    <form method="POST" id="new-ticket-form" class="flex flex-col gap-4">
+      <div>
+        <label class="block text-[12px] font-semibold text-gray-500 mb-1.5">Subject</label>
+        <input type="text" name="title" value="{{ form.get('title', '') }}" placeholder="Brief summary of the issue" required
+          class="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-[14px] focus:outline-none focus:ring-2 focus:ring-[#ff6337]/20 focus:border-[#ff6337]">
+      </div>
+      <div>
+        <label class="block text-[12px] font-semibold text-gray-500 mb-1.5">Description</label>
+        <textarea name="description" rows="6" placeholder="Steps to reproduce, impact, etc." required
+          class="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-[14px] focus:outline-none focus:ring-2 focus:ring-[#ff6337]/20 focus:border-[#ff6337]">{{ form.get('description', '') }}</textarea>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-[12px] font-semibold text-gray-500 mb-1.5">Category</label>
+          <select name="category" class="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-[14px] bg-white">
+            {% for c in categories %}<option value="{{ c }}" {% if form.get('category','other')==c %}selected{% endif %}>{{ c|title }}</option>{% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-[12px] font-semibold text-gray-500 mb-1.5">Priority</label>
+          <select name="priority" class="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-[14px] bg-white">
+            {% for p in priorities %}<option value="{{ p }}" {% if form.get('priority','medium')==p %}selected{% endif %}>{{ priority_labels[p] }}</option>{% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-[12px] font-semibold text-gray-500 mb-2">Assign to</label>
+        <div class="flex gap-1 p-1 bg-gray-50 rounded-xl border border-gray-100 mb-3 w-fit">
+          <button type="button" onclick="setMode('person')" id="mode-person" class="assign-toggle-btn px-4 py-1.5 rounded-lg text-[13px] font-semibold transition-colors">A Person</button>
+          <button type="button" onclick="setMode('department')" id="mode-department" class="assign-toggle-btn px-4 py-1.5 rounded-lg text-[13px] font-semibold transition-colors">Whole Department</button>
+        </div>
+        <input type="hidden" name="assign_mode" id="assign_mode" value="{{ assign_mode }}">
+
+
+        <div id="block-person" class="{% if assign_mode == 'department' %}hidden{% endif %}">
+          <select id="nt_dept_filter" onchange="filterPickerByDepartment('assigned_to', this.value)" class="w-full mb-2 px-3.5 py-2.5 border border-gray-200 rounded-xl text-[14px] bg-white">
+            <option value="{{ current_user.department }}">My department — {{ current_user.department }}</option>
+            <option value="">All departments</option>
+            {% for dept in departments %}{% if dept != current_user.department %}<option value="{{ dept }}">{{ dept }}</option>{% endif %}{% endfor %}
+          </select>
+          <div class="assignee-picker flex gap-2">
+            <input type="text" id="assigned_to_search" placeholder="Search by name or email..." autocomplete="off"
+              class="flex-1 px-3.5 py-2.5 border border-gray-200 rounded-xl text-[14px] focus:outline-none focus:ring-2 focus:ring-[#ff6337]/20">
+            <button type="button" id="assigned_to_auto_assign_btn" class="px-3.5 py-2.5 bg-amber-400 text-amber-950 text-[13px] font-semibold rounded-xl whitespace-nowrap hover:bg-amber-500 transition-colors">⚡ Auto-Assign</button>
+            <input type="hidden" id="assigned_to_value" name="assigned_to_id">
+            <div id="assigned_to_results" class="picker-results hidden"></div>
+            
+            {% if current_user.is_admin %}
+            <button type="button" id="smart_assign_btn" class="mt-2 text-[12px] font-semibold text-[#ff6337] hover:underline flex items-center gap-1">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Find Best Assignee
+            </button>
+            <div id="smart_assign_results" class="hidden mt-2 flex flex-col gap-2"></div>
+            {% endif %}
+          </div>
+          <p class="text-[12px] text-gray-400 mt-1.5">Search and pick a name, or use Auto-Assign for the least busy person.</p>
+        </div>
+
+
+
+        <div id="block-department" class="{% if assign_mode != 'department' %}hidden{% endif %}">
+          <select name="assigned_department" class="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-[14px] bg-white">
+            {% for dept in departments %}<option value="{{ dept }}" {% if form.get('assigned_department', current_user.department)==dept %}selected{% endif %}>{{ dept }}</option>{% endfor %}
+          </select>
+          <p class="text-[12px] text-gray-400 mt-1.5">Anyone in this department can claim the ticket.</p>
+        </div>
+      </div>
+
+      <div class="flex gap-3 pt-2">
+        <button type="submit" class="px-5 py-2.5 bg-[#ff6337] text-white text-[14px] font-semibold rounded-xl hover:bg-[#e5522c] transition-colors">Submit Ticket</button>
+        <a href="{{ url_for('tickets.index') }}" class="px-5 py-2.5 border border-gray-200 text-gray-600 text-[14px] font-semibold rounded-xl hover:bg-gray-50">Cancel</a>
+      </div>
+    </form>
+  </section>
+
+  <aside class="bg-white border border-gray-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] h-fit">
+    <h3 class="text-[14px] font-bold text-gray-900 mb-4">Priority & SLA Policy</h3>
+    <ul class="flex flex-col gap-3">
+      {% for p in priorities %}
+      <li class="flex items-center gap-3 pb-3 border-b border-gray-50 last:border-0 last:pb-0">
+        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold {{ priority_badge[p] }}">{{ priority_labels[p] }}</span>
+        <div class="flex flex-col">
+          <strong class="text-[13px] text-gray-800">{{ sla_labels[p] }}</strong>
+          <span class="text-[11px] text-gray-400">Resolution target from submission</span>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  </aside>
+</div>
+
+<style>
+  .assign-toggle-btn{color:#6b7280;background:transparent;}
+  .assign-toggle-btn.active{background:#fff;color:#ff6337;box-shadow:0 1px 2px rgba(0,0,0,.05);}
+</style>
+<script>
+  function setMode(mode) {
+    document.getElementById('assign_mode').value = mode;
+    document.getElementById('mode-person').classList.toggle('active', mode === 'person');
+    document.getElementById('mode-department').classList.toggle('active', mode === 'department');
+    document.getElementById('block-person').classList.toggle('hidden', mode !== 'person');
+    document.getElementById('block-department').classList.toggle('hidden', mode !== 'department');
+  }
+  setMode('{{ assign_mode }}');
+  const employees = {{ employees_json | tojson }};
+  initAssigneePicker('assigned_to', employees);
+  filterPickerByDepartment('assigned_to', '{{ current_user.department }}');
+  document.getElementById('new-ticket-form').addEventListener('submit', function (e) {
+    if (document.getElementById('assign_mode').value === 'person' && !document.getElementById('assigned_to_value').value) {
+      e.preventDefault();
+      alert('Please search and select an employee (or use Auto-Assign) before submitting.');
+    }
+  });
+
+  {% if current_user.is_admin %}
+  initSmartAssign('smart_assign_btn', 'smart_assign_results', 'nt_dept_filter', 'assigned_to_value', 'assigned_to_search');
+  {% endif %}
+</script>
+{% endblock %}
+

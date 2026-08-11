@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block crumb %}Administration{% endblock %}
+{% block page_title %}All Delegations{% endblock %}
+{% block title %}Delegations &mdash; Kudu Ticketing{% endblock %}
+
+{% block content %}
+<p class="text-[13px] text-gray-500 mb-5">System-wide view of out-of-office coverage.</p>
+<div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+  <div class="overflow-x-auto">
+    <table class="w-full text-[13px]">
+      <thead><tr class="text-left text-[11px] font-bold text-gray-400 uppercase border-b border-gray-100">
+        <th class="p-3.5">Delegator</th><th class="p-3.5">Delegatee</th><th class="p-3.5">Start</th><th class="p-3.5">End</th><th class="p-3.5">Status</th><th class="p-3.5">Actions</th>
+      </tr></thead>
+      <tbody>
+        {% for d in delegations %}
+        {% set st = d.status_label() %}
+        <tr class="border-b border-gray-50 hover:bg-gray-50">
+          <td class="p-3.5 font-semibold">{{ d.delegator.full_name }}</td>
+          <td class="p-3.5">{{ d.delegatee.full_name }}</td>
+          <td class="p-3.5 text-gray-500">{{ d.start_time.strftime('%Y-%m-%d %H:%M') }}</td>
+          <td class="p-3.5 text-gray-500">{{ d.end_time.strftime('%Y-%m-%d %H:%M') }}</td>
+          <td class="p-3.5">
+            {% if st == 'active' %}<span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700">Active</span>
+            {% elif st == 'pending' %}<span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700">Pending</span>
+            {% elif st == 'expired' %}<span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-gray-100 text-gray-600">Expired</span>
+            {% else %}<span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-red-50 text-red-700">Revoked</span>{% endif %}
+          </td>
+          <td class="p-3.5 flex gap-2">
+            {% if st in ('pending', 'active') %}
+            <a href="{{ url_for('admin.edit_delegation', delegation_id=d.id) }}" class="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">Edit</a>
+            <form method="POST" action="{{ url_for('admin.revoke_delegation', delegation_id=d.id) }}" onsubmit="return confirm('Revoke this delegation now?');">
+              <button type="submit" class="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-red-200 text-red-600 hover:bg-red-50">Revoke</button>
+            </form>
+            {% else %}<span class="text-gray-300">—</span>{% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="p-8 text-center text-gray-400 text-[13px]">No delegations recorded.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block crumb %}Team &rsaquo; Departments{% endblock %}
+{% block page_title %}{{ stats.department }}{% endblock %}
+{% block title %}{{ stats.department }} &mdash; Kudu Ticketing{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('team.departments') }}" class="text-[13px] font-semibold text-gray-500 hover:text-gray-800">&larr; Back to Departments</a>
+
+<div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 my-5">
+  {% set cards = [('Members', stats.member_count),('Open Tickets', stats.open_tickets),('Unassigned', stats.unassigned|length),('Critical', stats.critical),('SLA At Risk', stats.sla_at_risk),('SLA Compliance', (stats.sla_compliance ~ '%') if stats.sla_compliance is not none else '—')] %}
+  {% for label, value in cards %}
+  <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+    <div class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">{{ label }}</div>
+    <strong class="text-[22px] font-bold text-gray-900">{{ value }}</strong>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <section class="lg:col-span-2 bg-white border border-gray-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+    <h3 class="text-[14px] font-bold text-gray-900 mb-4">Members &amp; Workload</h3>
+    <div class="flex flex-col gap-3">
+      {% for mw in member_workloads %}
+      <a href="{{ url_for('team.member_profile', user_id=mw.user.id) }}" class="flex items-center gap-3 hover:bg-gray-50 rounded-xl p-2 -m-2 transition-colors">
+        <span class="text-[13px] font-semibold text-gray-800 w-32 truncate">{{ mw.user.full_name }}</span>
+        <div class="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+          <div class="h-full rounded-full {{ 'bg-emerald-500' if mw.workload.state == 'Available' else ('bg-blue-500' if mw.workload.state == 'Normal' else ('bg-amber-500' if mw.workload.state == 'High workload' else 'bg-red-500')) }}" style="width:{{ [mw.workload.pct, 100]|min }}%"></div>
+        </div>
+        <span class="text-[12px] font-semibold text-gray-500 w-10 text-right">{{ mw.workload.pct }}%</span>
+      </a>
+      {% else %}
+      <p class="text-[13px] text-gray-400">No active members in this department.</p>
+      {% endfor %}
+    </div>
+  </section>
+
+  <aside class="flex flex-col gap-5">
+    <section class="bg-white border border-gray-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+      <h3 class="text-[14px] font-bold text-gray-900 mb-3">Ticket Distribution</h3>
+      <div class="flex flex-col gap-2">
+        {% for s, count in stats.status_counts.items() %}
+        <div class="flex items-center justify-between text-[13px]">
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold {{ status_badge[s] }}">{{ status_labels[s] }}</span>
+          <span class="font-semibold text-gray-800">{{ count }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    {% if current_user.is_admin and stats.unassigned %}
+    <section class="bg-white border border-gray-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+      <h3 class="text-[14px] font-bold text-gray-900 mb-3">Unassigned Queue</h3>
+      <div class="flex flex-col gap-2">
+        {% for t in stats.unassigned %}
+        <a href="{{ url_for('tickets.detail', ticket_id=t.id) }}" class="flex items-center justify-between py-1.5 border-b border-gray-50 last:border-0 text-[13px] hover:text-[#ff6337]">
+          <span class="font-bold text-[#ff6337]">{{ t.ticket_number }}</span>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold {{ priority_badge[t.priority] }}">{{ priority_labels[t.priority] }}</span>
+        </a>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+  </aside>
+</div>
+{% endblock %}

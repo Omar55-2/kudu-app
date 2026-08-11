@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{{ brand_name }}{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a href="{{ url_for('tickets.dashboard') }}" class="brand">
+        <div class="brand-mark">
+          <img src="https://play-lh.googleusercontent.com/m-AAl7wF2XWb-k-RnXZgRGWxSweAxY49dz2yDDgbDjmK_2X4bCN-8YSPM21FxjAgXQU" alt="Logo">
+        </div>
+        <div>
+          <strong>{{ brand_name }}</strong>
+          <span>Ticketing</span>
+        </div>
+      </a>
+
+      <nav class="sidebar-nav">
+        <a href="{{ url_for('tickets.dashboard') }}" class="nav-item {% if request.endpoint == 'tickets.dashboard' %}active{% endif %}">
+          <span>📊 Dashboard</span>
+        </a>
+        <a href="{{ url_for('tickets.index') }}" class="nav-item {% if request.endpoint == 'tickets.index' %}active{% endif %}">
+          <span>🎫 Tickets</span>
+        </a>
+        <a href="{{ url_for('tickets.new_ticket') }}" class="nav-item {% if request.endpoint == 'tickets.new_ticket' %}active{% endif %}">
+          <span>➕ New Ticket</span>
+        </a>
+        <a href="{{ url_for('tickets.notifications') }}" class="nav-item {% if request.endpoint == 'tickets.notifications' %}active{% endif %}">
+          <span>🔔 Notifications</span>
+          {% if unread_notif_count > 0 %}
+            <span class="dot"></span>
+          {% endif %}
+        </a>
+        {% if current_user.is_admin %}
+          <a href="{{ url_for('admin.panel') }}" class="nav-item {% if request.endpoint == 'admin.panel' %}active{% endif %}">
+            <span>⚙️ Admin Panel</span>
+          </a>
+        {% endif %}
+      </nav>
+
+      <div class="sidebar-foot">
+        &copy; {{ brand_name }} Ticketing System
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <div class="topbar-title">{% block page_title %}{{ brand_name }}{% endblock %}</div>
+        <div class="topbar-actions">
+          <a href="{{ url_for('tickets.notifications') }}" class="bell" title="Notifications">
+            🔔
+            {% if unread_notif_count > 0 %}
+              <span class="count">{{ unread_notif_count }}</span>
+            {% endif %}
+          </a>
+          <div class="profile-chip">
+            <div class="avatar">{{ current_user.full_name[0]|upper }}</div>
+            <div class="who">
+              <strong>{{ current_user.full_name }}</strong>
+              <span>{{ current_user.department }} • {{ current_user.role|capitalize }}</span>
+            </div>
+          </div>
+          <a href="{{ url_for('auth.logout') }}" class="btn btn-ghost btn-sm">Logout</a>
+        </div>
+      </header>
+
+      <div class="content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+  </div>
+</body>
+</html>

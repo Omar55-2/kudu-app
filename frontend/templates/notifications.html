@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block crumb %}Account{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+{% block title %}Notifications &mdash; Kudu Ticketing{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-5">
+  <p class="text-[13px] text-gray-500">Everything that's happened on tickets you're involved in.</p>
+  {% if notifications %}
+  <form method="POST" action="{{ url_for('tickets.dismiss_all_notifications') }}">
+    <button type="submit" class="text-[13px] font-semibold text-gray-500 hover:text-gray-800">Clear all</button>
+  </form>
+  {% endif %}
+</div>
+
+{% if notifications %}
+<div class="flex flex-col gap-3">
+  {% for n in notifications %}
+  <div class="group flex items-start gap-4 bg-white border border-gray-200 rounded-2xl p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:border-gray-300 transition-colors">
+    <div class="w-10 h-10 rounded-xl bg-orange-50 text-[#ff6337] flex items-center justify-center flex-shrink-0">
+      <i data-lucide="bell" class="w-[18px] h-[18px]"></i>
+    </div>
+    <a href="{{ url_for('tickets.open_notification', notification_id=n.id) }}" class="flex-1 min-w-0">
+      <div class="flex items-center justify-between gap-2">
+        <strong class="text-[14px] text-gray-900">{{ n.title }}</strong>
+        <span class="text-[11px] text-gray-400 whitespace-nowrap">{{ n.created_at | riyadh }}</span>
+      </div>
+      <p class="text-[13px] text-gray-500 mt-0.5">{{ n.message }}</p>
+    </a>
+    <div class="flex items-center gap-2 flex-shrink-0">
+      {% if n.ticket_id %}
+      <a href="{{ url_for('tickets.detail', ticket_id=n.ticket_id) }}" class="text-[12px] font-semibold text-[#ff6337] hover:underline">Open</a>
+      {% endif %}
+      <form method="POST" action="{{ url_for('tickets.dismiss_notification', notification_id=n.id) }}">
+        <button type="submit" class="w-7 h-7 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 flex items-center justify-center transition-colors" title="Dismiss">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-20 bg-white border-2 border-dashed border-gray-200 rounded-2xl">
+  <div class="w-14 h-14 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center mx-auto mb-4">
+    <i data-lucide="check-check" class="w-6 h-6"></i>
+  </div>
+  <h3 class="text-[16px] font-bold text-gray-800 mb-1">You're all caught up</h3>
+  <p class="text-[13px] text-gray-500">New activity on your tickets will show up here.</p>
+</div>
+{% endif %}
+{% endblock %}

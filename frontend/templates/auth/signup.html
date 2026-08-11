@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% block title %}Sign Up &mdash; Kudu Ticketing{% endblock %}
+
+{% block auth_content %}
+<style>
+  @keyframes authFloaty { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+  @keyframes authFloatySlow { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-8px) rotate(3deg); } }
+  @keyframes authFloatyDrift { 0%, 100% { transform: translate(0,0) rotate(0deg); } 50% { transform: translate(2px,-7px) rotate(-4deg); } }
+  @keyframes authSpinSlow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  @keyframes authGlow { 0%, 100% { filter: drop-shadow(0 0 0 rgba(255,99,55,0)); } 50% { filter: drop-shadow(0 0 6px rgba(255,99,55,0.25)); } }
+  @keyframes authBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
+  @keyframes authPulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+  #authPerson { animation: authBob 3.4s ease-in-out infinite; transform-origin: center; }
+  #authCheck { animation: authFloaty 3s ease-in-out infinite; animation-delay: .3s; }
+  #authBell { animation: authFloaty 3.8s ease-in-out infinite; animation-delay: .7s; }
+  #authMonitor { animation: authGlow 3.4s ease-in-out infinite; }
+  #authTicket { animation: authFloatyDrift 4.2s ease-in-out infinite; animation-delay: .2s; transform-origin: center; }
+  #authComment { animation: authFloatySlow 3.6s ease-in-out infinite; animation-delay: 1s; transform-origin: center; }
+  #authGear { animation: authSpinSlow 9s linear infinite; transform-origin: 214px 172px; }
+  #authClip { animation: authFloaty 4s ease-in-out infinite; animation-delay: .5s; }
+  #authSparkle { animation: authPulse 2.2s ease-in-out infinite; }
+</style>
+<div class="grid grid-cols-1 md:grid-cols-2 bg-white rounded-3xl shadow-2xl overflow-hidden min-h-[620px]">
+  <div class="hidden md:flex relative flex-col justify-center items-center p-8 overflow-hidden"
+       style="background: radial-gradient(circle at 20% 15%, rgba(255,203,110,0.35) 0%, transparent 40%), radial-gradient(circle at 85% 80%, rgba(23,184,151,0.25) 0%, transparent 45%), linear-gradient(160deg, #fff0e6 0%, #ffe3d1 60%, #ffd2b8 100%);">
+    <span class="absolute w-[140px] h-[140px] rounded-full bg-amber-200/60 top-[8%] -left-[30px]"></span>
+    <span class="absolute w-[90px] h-[90px] rounded-full bg-emerald-200/60 bottom-[10%] -right-[10px]"></span>
+    <span class="absolute w-[46px] h-[46px] rounded-full bg-orange-200/60 top-[55%] left-[8%]"></span>
+
+    <svg viewBox="0 0 240 220" width="240" height="220" class="relative z-10">
+      <rect x="30" y="150" width="180" height="6" rx="3" fill="#ff6337" opacity="0.25"/>
+
+      <!-- Ticket stub: far top-left corner, clear of everything -->
+      <g id="authTicket">
+        <rect x="10" y="10" width="34" height="22" rx="4" fill="#fff" stroke="#ff6337" stroke-width="2"/>
+        <circle cx="10" cy="21" r="3" fill="#fff0e6"/>
+        <circle cx="44" cy="21" r="3" fill="#fff0e6"/>
+        <line x1="16" y1="16" x2="38" y2="16" stroke="#ffcbb0" stroke-width="2" stroke-linecap="round"/>
+        <line x1="16" y1="22" x2="32" y2="22" stroke="#ffcbb0" stroke-width="2" stroke-linecap="round"/>
+        <line x1="16" y1="27" x2="26" y2="27" stroke="#17b897" stroke-width="2" stroke-linecap="round"/>
+      </g>
+
+      <!-- Comment bubble: far top-right corner -->
+      <g id="authComment">
+        <path d="M188 8 h34 a6 6 0 0 1 6 6 v14 a6 6 0 0 1 -6 6 h-16 l-8 8 v-8 h-10 a6 6 0 0 1 -6 -6 v-14 a6 6 0 0 1 6 -6 z" fill="#ffffff" stroke="#ff6337" stroke-width="2"/>
+        <circle cx="197" cy="21" r="2.2" fill="#ff6337"/>
+        <circle cx="205" cy="21" r="2.2" fill="#ff6337"/>
+        <circle cx="213" cy="21" r="2.2" fill="#ff6337"/>
+      </g>
+
+      <!-- Person: drawn BEFORE the monitor so the monitor occludes the head/body on the down-bob -->
+      <g id="authPerson">
+        <circle cx="120" cy="62" r="18" fill="#fde68a"/>
+        <path d="M96 100 q24 -20 48 0" fill="none" stroke="#ff6337" stroke-width="3" stroke-linecap="round"/>
+      </g>
+
+      <!-- Monitor: opaque fill, drawn after the person so it sits visually in front -->
+      <rect id="authMonitor" x="70" y="96" width="100" height="60" rx="8" fill="#ffffff" stroke="#ff6337" stroke-width="2"/>
+      <line x1="82" y1="112" x2="150" y2="112" stroke="#ffcbb0" stroke-width="4" stroke-linecap="round"/>
+      <line x1="82" y1="124" x2="140" y2="124" stroke="#ffcbb0" stroke-width="4" stroke-linecap="round"/>
+      <line x1="82" y1="136" x2="120" y2="136" stroke="#17b897" stroke-width="4" stroke-linecap="round"/>
+      <rect x="112" y="156" width="16" height="10" fill="#ff6337" opacity="0.25"/>
+
+      <!-- SLA-met check badge: right edge, mid-height, away from monitor -->
+      <g id="authCheck">
+        <circle cx="222" cy="100" r="16" fill="#17b897" opacity="0.15"/>
+        <path d="M215 100 l5 5 10 -11" stroke="#17b897" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+
+      <!-- Notification bell: left edge, mid-height -->
+      <g id="authBell">
+        <circle cx="16" cy="100" r="14" fill="#eab308" opacity="0.15"/>
+        <path d="M16 93v6l4 4h-8z" fill="#eab308"/>
+      </g>
+
+      <!-- Gear: bottom-right corner, clear of the monitor and stand -->
+      <g id="authGear">
+        <circle cx="214" cy="172" r="10" fill="none" stroke="#7c3aed" stroke-width="2.4" opacity="0.6"/>
+        <circle cx="214" cy="172" r="3.2" fill="#7c3aed" opacity="0.6"/>
+        <g stroke="#7c3aed" stroke-width="2.4" opacity="0.6">
+          <line x1="214" y1="158" x2="214" y2="162"/>
+          <line x1="214" y1="182" x2="214" y2="186"/>
+          <line x1="200" y1="172" x2="204" y2="172"/>
+          <line x1="224" y1="172" x2="228" y2="172"/>
+        </g>
+      </g>
+
+      <!-- Paperclip: bottom-left corner -->
+      <g id="authClip">
+        <path d="M14 176 q0 -13 11 -13 t11 13 v16 q0 7 -7 7 t-7 -7 v-13" fill="none" stroke="#ff6337" stroke-width="2.2" stroke-linecap="round" opacity="0.65"/>
+      </g>
+
+      <!-- Sparkle: near the check badge, offset so it doesn't sit on top -->
+      <g id="authSparkle">
+        <path d="M226 74 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2 z" fill="#eab308"/>
+      </g>
+    </svg>
+
+    <div class="relative z-10 text-center mt-4">
+      <h2 class="text-[19px] font-bold text-gray-900 mb-1">Join your team</h2>
+      <p class="text-[13px] text-gray-500 max-w-[240px] mx-auto leading-relaxed">One account gets you ticket tracking, SLA visibility, and department queues.</p>
+    </div>
+  </div>
+
+  <div class="flex flex-col justify-center p-10 md:p-12">
+    <div class="w-full max-w-[380px] mx-auto">
+      <div class="flex items-center gap-2 mb-7">
+        <img src="https://play-lh.googleusercontent.com/m-AAl7wF2XWb-k-RnXZgRGWxSweAxY49dz2yDDgbDjmK_2X4bCN-8YSPM21FxjAgXQU" class="w-7 h-7 rounded-lg">
+        <span class="font-extrabold text-[15px] text-gray-900">{{ brand_name }}</span>
+      </div>
+      <h1 class="text-[22px] font-bold text-gray-900 mb-1">Create your account</h1>
+      <p class="text-[13px] text-gray-500 mb-6">Register as an employee. We'll email you a link to verify your address.</p>
+
+      <form method="POST" class="flex flex-col gap-4">
+        <div>
+          <label class="block text-[12px] font-semibold text-gray-500 mb-1.5">Full name</label>
+          <input type="text" name="full_name" value="{{ form.get('full_name', '') }}" required
+            class="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-[14px] focus:outline-none focus:ring-2 focus:ring-[#ff6337]/20 focus:border-[#ff6337]">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[12px] font-semibold text-gray-500 mb-1.5">Work email</label>
+            <input type="email" name="email" value="{{ form.get('email', '') }}" required
+              class="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-[14px] focus:outline-none focus:ring-2 focus:ring-[#ff6337]/20 focus:border-[#ff6337]">
+          </div>
+          <div>
+            <label class="block text-[12px] font-semibold text-gray-500 mb-1.5">Department</label>
+            <select name="department" class="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-[14px] bg-white focus:outline-none focus:ring-2 focus:ring-[#ff6337]/20">
+              {% for dept in departments %}
+              <option value="{{ dept }}" {% if form.get('department', 'Support') == dept %}selected{% endif %}>{{ dept }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[12px] font-semibold text-gray-500 mb-1.5">Password</label>
+            <div class="relative">
+              <input type="password" id="password" name="password" minlength="8" required
+                class="w-full px-3.5 py-2.5 pr-10 border border-gray-200 rounded-xl text-[14px] focus:outline-none focus:ring-2 focus:ring-[#ff6337]/20">
+              <button type="button" class="password-toggle absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" data-target="password" aria-label="Show password">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+          <div>
+            <label class="block text-[12px] font-semibold text-gray-500 mb-1.5">Confirm password</label>
+            <div class="relative">
+              <input type="password" id="confirm_password" name="confirm_password" minlength="8" required
+                class="w-full px-3.5 py-2.5 pr-10 border border-gray-200 rounded-xl text-[14px] focus:outline-none focus:ring-2 focus:ring-[#ff6337]/20">
+              <button type="button" class="password-toggle absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" data-target="confirm_password" aria-label="Show password">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        <button type="submit" class="w-full py-2.5 bg-[#ff6337] text-white text-[14px] font-semibold rounded-xl hover:bg-[#e5522c] transition-colors shadow-sm mt-1">Create account</button>
+      </form>
+      <p class="text-center text-[13px] text-gray-500 mt-5">Already registered? <a href="{{ url_for('auth.login') }}" class="text-[#ff6337] font-semibold">Sign in</a></p>
+    </div>
+  </div>
+</div>
+{% include "auth/_password_toggle_script.html" %}
+{% endblock %}

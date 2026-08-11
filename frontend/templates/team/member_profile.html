@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block crumb %}Team &rsaquo; Members{% endblock %}
+{% block page_title %}{{ member.full_name }}{% endblock %}
+{% block title %}{{ member.full_name }} &mdash; Kudu Ticketing{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('team.members') }}" class="text-[13px] font-semibold text-gray-500 hover:text-gray-800">&larr; Back to Members</a>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-4">
+  <div class="lg:col-span-2 flex flex-col gap-5">
+
+    <section class="bg-white border border-gray-200 rounded-2xl p-6 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+      <div class="flex items-center gap-4 mb-4">
+        <div class="w-16 h-16 rounded-full bg-gradient-to-br from-[#ff6337] to-[#c8531d] text-white text-[22px] font-bold flex items-center justify-center flex-shrink-0">{{ member.full_name[:1]|upper }}</div>
+        <div>
+          <h2 class="text-[19px] font-bold text-gray-900">{{ member.full_name }}</h2>
+          <p class="text-[13px] text-gray-500">{{ member.email }}</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 flex-wrap mb-4">
+        <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-gray-100 text-gray-600">{{ member.department }}</span>
+        <span class="px-2.5 py-1 rounded-full text-[11px] font-bold {{ 'bg-violet-50 text-violet-600' if member.is_admin else 'bg-blue-50 text-blue-600' }}">{{ member.role|title }}</span>
+        <span class="px-2.5 py-1 rounded-full text-[11px] font-bold {{ 'bg-emerald-50 text-emerald-700' if member.is_active else 'bg-red-50 text-red-700' }}">{{ 'Active' if member.is_active else 'Inactive' }}</span>
+        <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700">{{ availability_labels.get(member.availability, member.availability) }}</span>
+      </div>
+      <a href="mailto:{{ member.email }}" class="inline-flex items-center gap-2 px-4 py-2 bg-[#ff6337] text-white text-[13px] font-semibold rounded-xl hover:bg-[#e5522c] transition-colors">
+        <i data-lucide="mail" class="w-4 h-4"></i> Message
+      </a>
+
+      {% if covering %}
+      <div class="mt-4 text-[12px] text-amber-700 bg-amber-50 rounded-lg px-3 py-2">Currently delegating their work to <strong>{{ covering.delegatee.full_name }}</strong> until {{ covering.end_time.strftime('%Y-%m-%d %H:%M') }} UTC.</div>
+      {% endif %}
+      {% if covered_by %}
+      <div class="mt-2 text-[12px] text-blue-700 bg-blue-50 rounded-lg px-3 py-2">Covering for {{ covered_by[0].delegator.full_name }} until {{ covered_by[0].end_time.strftime('%Y-%m-%d %H:%M') }} UTC.</div>
+      {% endif %}
+    </section>
+
+    <section class="bg-white border border-gray-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+      <h3 class="text-[14px] font-bold text-gray-900 mb-4">Recent Tickets</h3>
+      {% if tickets %}
+      <div class="flex flex-col gap-2">
+        {% for t in tickets %}
+        <a href="{{ url_for('tickets.detail', ticket_id=t.id) }}" class="flex items-center justify-between gap-3 py-2 border-b border-gray-50 last:border-0 hover:bg-gray-50 -mx-2 px-2 rounded-lg transition-colors">
+          <div class="min-w-0">
+            <span class="font-bold text-[#ff6337] text-[12px]">{{ t.ticket_number }}</span>
+            <span class="text-[13px] text-gray-700 ml-1 truncate">{{ t.title }}</span>
+          </div>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold {{ status_badge[t.status] }} flex-shrink-0">{{ status_labels[t.status] }}</span>
+        </a>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="text-[13px] text-gray-400">No accessible tickets to show.</p>
+      {% endif %}
+    </section>
+
+    {% if current_user.is_admin and performance %}
+    <section class="bg-white border border-gray-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+      <h3 class="text-[14px] font-bold text-gray-900 mb-1">Performance</h3>
+      <p class="text-[11px] text-gray-400 mb-4">Admin only &middot; calculated from resolved ticket and comment history.</p>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="bg-gray-50 rounded-xl p-3">
+          <div class="text-[11px] text-gray-400 mb-1">SLA Compliance</div>
+          <div class="text-[18px] font-bold text-gray-900">{{ (performance.sla_compliance ~ '%') if performance.sla_compliance is not none else '—' }}</div>
+        </div>
+        <div class="bg-gray-50 rounded-xl p-3">
+          <div class="text-[11px] text-gray-400 mb-1">Avg Resolution Time</div>
+          <div class="text-[18px] font-bold text-gray-900">{{ (performance.avg_resolution_hours ~ 'h') if performance.avg_resolution_hours is not none else '—' }}</div>
+        </div>
+        <div class="bg-gray-50 rounded-xl p-3">
+          <div class="text-[11px] text-gray-400 mb-1">Avg First Response</div>
+          <div class="text-[18px] font-bold text-gray-900">{{ (performance.avg_first_response_hours ~ 'h') if performance.avg_first_response_hours is not none else '—' }}</div>
+        </div>
+        <div class="bg-gray-50 rounded-xl p-3">
+          <div class="text-[11px] text-gray-400 mb-1">Reopen Rate</div>
+          <div class="text-[18px] font-bold text-gray-900">{{ (performance.reopen_rate ~ '%') if performance.reopen_rate is not none else '—' }}</div>
+        </div>
+      </div>
+      <p class="text-[11px] text-gray-400 mt-3">Resolved tickets: {{ performance.resolved_count }} &middot; Reopened: {{ performance.reopened_count }}</p>
+    </section>
+    {% endif %}
+  </div>
+
+  <aside class="flex flex-col gap-5">
+    <section class="bg-white border border-gray-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+      <h3 class="text-[14px] font-bold text-gray-900 mb-3">Workload</h3>
+      <div class="flex items-end justify-between mb-2">
+        <strong class="text-[26px] font-bold text-gray-900">{{ workload.pct }}%</strong>
+        <span class="px-2 py-0.5 rounded-full text-[11px] font-bold {{ 'bg-emerald-50 text-emerald-700' if workload.state == 'Available' else ('bg-blue-50 text-blue-700' if workload.state == 'Normal' else ('bg-amber-50 text-amber-700' if workload.state == 'High workload' else 'bg-red-50 text-red-700')) }}">{{ workload.state }}</span>
+      </div>
+      <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden mb-3">
+        <div class="h-full rounded-full {{ 'bg-emerald-500' if workload.state == 'Available' else ('bg-blue-500' if workload.state == 'Normal' else ('bg-amber-500' if workload.state == 'High workload' else 'bg-red-500')) }}" style="width:{{ [workload.pct, 100]|min }}%"></div>
+      </div>
+      {% if current_user.is_admin %}
+      <p class="text-[12px] text-gray-500 mb-3">{{ workload.points }} / {{ workload.capacity }} points &middot; {{ workload.active_count }} active tickets</p>
+      <div class="flex flex-col gap-1.5 text-[12px]">
+        {% for p, count in workload.by_priority.items() %}
+        <div class="flex items-center justify-between"><span class="text-gray-500 capitalize">{{ p }}</span><span class="font-semibold text-gray-800">{{ count }}</span></div>
+        {% endfor %}
+      </div>
+      <div class="flex items-center justify-between text-[12px] mt-2 pt-2 border-t border-gray-50">
+        <span class="text-gray-500">SLA At Risk</span><span class="font-semibold text-amber-600">{{ workload.sla_at_risk }}</span>
+      </div>
+      <div class="flex items-center justify-between text-[12px]">
+        <span class="text-gray-500">SLA Breached</span><span class="font-semibold text-red-600">{{ workload.sla_breached }}</span>
+      </div>
+      {% else %}
+      <p class="text-[12px] text-gray-500">{{ workload.active_count }} active tickets</p>
+      {% endif %}
+    </section>
+
+    {% if current_user.is_admin %}
+    <section class="bg-white border border-gray-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+      <h3 class="text-[14px] font-bold text-gray-900 mb-3">Manage</h3>
+      <div class="flex flex-col gap-3">
+        <form method="POST" action="{{ url_for('team.change_availability', user_id=member.id) }}" class="flex flex-col gap-1.5">
+          <label class="text-[11px] font-semibold text-gray-500">Availability</label>
+          <div class="flex gap-2">
+            <select name="availability" class="flex-1 px-2.5 py-2 border border-gray-200 rounded-lg text-[12px] bg-white">
+              {% for key in availability_states %}<option value="{{ key }}" {% if member.availability==key %}selected{% endif %}>{{ availability_labels[key] }}</option>{% endfor %}
+            </select>
+            <button type="submit" class="px-3 py-2 bg-gray-900 text-white text-[12px] font-semibold rounded-lg hover:bg-gray-800">Save</button>
+          </div>
+        </form>
+
+        <form method="POST" action="{{ url_for('admin.change_department', user_id=member.id) }}" class="flex flex-col gap-1.5">
+          <label class="text-[11px] font-semibold text-gray-500">Department</label>
+          <select name="department" onchange="this.form.submit()" class="px-2.5 py-2 border border-gray-200 rounded-lg text-[12px] bg-white">
+            {% for dept in departments %}<option value="{{ dept }}" {% if member.department==dept %}selected{% endif %}>{{ dept }}</option>{% endfor %}
+          </select>
+        </form>
+
+        {% if member.id != current_user.id %}
+        <form method="POST" action="{{ url_for('admin.change_role', user_id=member.id) }}" class="flex flex-col gap-1.5">
+          <label class="text-[11px] font-semibold text-gray-500">Role</label>
+          <select name="role" onchange="this.form.submit()" class="px-2.5 py-2 border border-gray-200 rounded-lg text-[12px] bg-white">
+            <option value="employee" {% if member.role=='employee' %}selected{% endif %}>Employee</option>
+            <option value="admin" {% if member.role=='admin' %}selected{% endif %}>Admin</option>
+          </select>
+        </form>
+
+        <a href="{{ url_for('admin.delegations') }}" class="text-[12px] font-semibold text-gray-500 hover:text-gray-800">View delegation records &rarr;</a>
+
+        <form method="POST" action="{{ url_for('admin.toggle_user', user_id=member.id) }}">
+          <button type="submit" class="w-full px-3 py-2 text-[12px] font-semibold rounded-lg border {{ 'text-red-600 border-red-200 hover:bg-red-50' if member.is_active else 'text-emerald-600 border-emerald-200 hover:bg-emerald-50' }}">
+            {{ 'Deactivate User' if member.is_active else 'Activate User' }}
+          </button>
+        </form>
+        {% endif %}
+      </div>
+    </section>
+    {% endif %}
+  </aside>
+</div>
+{% endblock %}

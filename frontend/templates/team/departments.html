@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block crumb %}Team{% endblock %}
+{% block page_title %}Departments{% endblock %}
+{% block title %}Departments &mdash; Kudu Ticketing{% endblock %}
+
+{% block content %}
+{% include "team/_nav.html" %}
+
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+  {% for d in dept_stats %}
+  <a href="{{ url_for('team.department_detail', department=d.department) }}" class="block bg-white border border-gray-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:border-gray-300 hover:-translate-y-0.5 transition-all">
+    <h3 class="text-[16px] font-bold text-gray-900 mb-3">{{ d.department }}</h3>
+    <div class="grid grid-cols-2 gap-3 text-[12px]">
+      <div><div class="text-gray-400">Members</div><div class="font-bold text-gray-900 text-[15px]">{{ d.member_count }}</div></div>
+      <div><div class="text-gray-400">Open Tickets</div><div class="font-bold text-gray-900 text-[15px]">{{ d.open_tickets }}</div></div>
+      {% if current_user.is_admin %}
+      <div><div class="text-gray-400">Capacity</div><div class="font-bold text-gray-900 text-[15px]">{{ d.capacity_pct }}%</div></div>
+      <div><div class="text-gray-400">SLA Compliance</div><div class="font-bold text-gray-900 text-[15px]">{{ (d.sla_compliance ~ '%') if d.sla_compliance is not none else '—' }}</div></div>
+      {% endif %}
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% endblock %}
